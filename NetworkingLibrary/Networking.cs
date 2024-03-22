@@ -1,42 +1,135 @@
-﻿
-namespace Communications {
-    public class Networking : INetworking {
-        string INetworking.ID { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+﻿using System;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-        bool INetworking.IsConnected => throw new NotImplementedException();
+namespace Communications
+{
+    public class Networking
+    {
+        private TcpClient tcpClient;
+        private readonly ILogger logger;
+        private readonly ReportConnectionEstablished onConnect;
+        private readonly ReportDisconnect onDisconnect;
+        private readonly ReportMessageArrived onMessage;
+        private CancellationTokenSource cancellationTokenSource;
 
-        bool INetworking.IsWaitingForClients => throw new NotImplementedException();
-
-        string INetworking.RemoteAddressPort => throw new NotImplementedException();
-
-        string INetworking.LocalAddressPort => throw new NotImplementedException();
-
-        Task INetworking.ConnectAsync(string host, int port) {
-            throw new NotImplementedException();
+        public Networking(ILogger logger,
+            ReportConnectionEstablished onConnect,
+            ReportDisconnect onDisconnect,
+            ReportMessageArrived onMessage)
+        {
+            this.logger = logger;
+            this.onConnect = onConnect;
+            this.onDisconnect = onDisconnect;
+            this.onMessage = onMessage;
         }
 
-        void INetworking.Disconnect() {
-            throw new NotImplementedException();
+        public string ID { get; set; }
+
+        public bool IsConnected => tcpClient?.Connected ?? false;
+
+        public bool IsWaitingForClients { get; private set; }
+
+        public string RemoteAddressPort => IsConnected ? tcpClient.Client.RemoteEndPoint.ToString() : "Disconnected";
+
+        public string LocalAddressPort => IsConnected ? tcpClient.Client.LocalEndPoint.ToString() : "Disconnected";
+
+        public async Task ConnectAsync(string host, int port)
+        {
+            try
+            {
+                tcpClient = new TcpClient();
+                await tcpClient.ConnectAsync(host, port);
+                onConnect?.Invoke(this);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Connection error: {ex.Message}");
+                throw;
+            }
         }
 
-        Task INetworking.HandleIncomingDataAsync(bool infinite) {
-            throw new NotImplementedException();
+        public void Disconnect()
+        {
+            tcpClient?.Close();
+            onDisconnect?.Invoke(this);
         }
 
-        Task INetworking.SendAsync(string text) {
-            throw new NotImplementedException();
+        public async Task HandleIncomingDataAsync(bool infinite)
+        {
+            try
+            {
+                while (IsConnected)
+                {
+                    NetworkStream stream = tcpClient.GetStream();
+                    byte[] buffer = new byte[1024];
+                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    onMessage?.Invoke(this, message);
+
+                    if (!infinite)
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Error handling incoming data: {ex.Message}");
+                onDisconnect?.Invoke(this);
+            }
         }
 
-        void INetworking.StopWaitingForClients() {
-            throw new NotImplementedException();
+        public async Task SendAsync(string text)
+        {
+            try
+            {
+                if (!IsConnected)
+                {
+                    logger.LogError("Cannot send message, not connected.");
+                    return;
+                }
+
+                byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("\n", "\\n"));
+                await tcpClient.GetStream().WriteAsync(buffer, 0, buffer.Length);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Error sending message: {ex.Message}");
+                onDisconnect?.Invoke(this);
+            }
         }
 
-        void INetworking.StopWaitingForMessages() {
-            throw new NotImplementedException();
+        public async Task WaitForClientsAsync(int port, bool infinite)
+        {
+            try
+            {
+                IsWaitingForClients = true;
+                TcpListener listener = new TcpListener(System.Net.IPAddress.Any, port);
+                listener.Start();
+                cancellationTokenSource = new CancellationTokenSource();
+
+                while (IsWaitingForClients)
+                {
+                    TcpClient client = await listener.AcceptTcpClientAsync();
+                    Networking newClient = new Networking(logger, onConnect, onDisconnect, onMessage);
+                    newClient.tcpClient = client;
+
+                    Task.Run(() => newClient.HandleIncomingDataAsync(infinite), cancellationTokenSource.Token);
+                    onConnect?.Invoke(newClient);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Error waiting for clients: {ex.Message}");
+            }
         }
 
-        Task INetworking.WaitForClientsAsync(int port, bool infinite) {
-            throw new NotImplementedException();
+        public void StopWaitingForClients()
+        {
+            IsWaitingForClients = false;
+            cancellationTokenSource?.Cancel();
         }
     }
 }
+
