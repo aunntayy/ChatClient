@@ -17,8 +17,9 @@ namespace ChatServer
                 }).Services.AddLogging(configure =>
                 {
                     configure.AddDebug();
+                
                     configure.AddProvider(new CustomFileLoggerProvider());
-                    configure.SetMinimumLevel(LogLevel.Debug);
+                    configure.SetMinimumLevel(LogLevel.Trace);
 
                 }).AddTransient<MainPage>();
 
