@@ -9,7 +9,6 @@ namespace LoggerLibrary
 {
     public class CustomFileLogger : ILogger
     {
-        private readonly string _FileName;
         private readonly string _filePath;
         public CustomFileLogger(string filePath)
         {
@@ -28,7 +27,7 @@ namespace LoggerLibrary
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            File.AppendAllText(_FileName, $"{DateTime.Now}: {logLevel}" + formatter(state, exception) + $"{Environment.NewLine}");
+            File.AppendAllText(_filePath, $"{DateTime.Now} {System.Threading.Thread.CurrentThread.ManagedThreadId} {logLevel}" + formatter(state, exception) + $"{Environment.NewLine}");
         }
     }
 }
