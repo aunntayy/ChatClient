@@ -10,9 +10,12 @@ namespace LoggerLibrary
     public class CustomFileLogger : ILogger
     {
         private readonly string _filePath;
-        public CustomFileLogger(string filePath)
+        public CustomFileLogger(string categoryName)
         {
-            _filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), filePath);
+            _filePath = Environment.GetFolderPath(
+                  Environment.SpecialFolder.ApplicationData)
+                  + Path.DirectorySeparatorChar
+                  + $"CS3500-{categoryName}.log";
         }
 
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull
@@ -27,8 +30,11 @@ namespace LoggerLibrary
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            File.AppendAllText(_filePath, $"{DateTime.Now} {System.Threading.Thread.CurrentThread.ManagedThreadId} {logLevel}" + formatter(state, exception) + $"{Environment.NewLine}");
+            string logMessage = $"{DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt")} ({System.Threading.Thread.CurrentThread.ManagedThreadId}) - {logLevel} - {formatter(state, exception)}{Environment.NewLine}";
+            File.AppendAllText(_filePath, logMessage);
         }
     }
+
+
 }
 
