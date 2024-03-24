@@ -19,11 +19,11 @@
             <Label Text="Server Information" FontSize="20" HorizontalOptions="Start" Margin="0,0,0,10"/>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Server Name: " VerticalOptions="Center"/>
-                <Label Text="{Binding ServerName}" VerticalOptions="Center"/>
+                <Label Text="{Binding ServerIPAddress}" VerticalOptions="Center"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="IP Address: " VerticalOptions="Center"/>
-                <Label Text="{Binding IPAddress}" VerticalOptions="Center"/>
+                <Label Text="{Binding ServerPort}" VerticalOptions="Center"/>
             </StackLayout>
         </StackLayout>
 

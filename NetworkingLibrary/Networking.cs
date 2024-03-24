@@ -28,6 +28,10 @@ namespace Communications
             this.onMessage = onMessage;
         }
 
+        public string ServerIPAddress { get; private set; }
+
+        public int ServerPort { get; private set; }
+
         public string ID { get; set; }
 
         public bool IsConnected => tcpClient?.Connected ?? false;
@@ -44,6 +48,11 @@ namespace Communications
             {
                 tcpClient = new TcpClient();
                 await tcpClient.ConnectAsync(host, port);
+
+                // Get server IP address and port
+                ServerIPAddress = ((System.Net.IPEndPoint)tcpClient.Client.RemoteEndPoint).Address.ToString();
+                ServerPort = ((System.Net.IPEndPoint)tcpClient.Client.RemoteEndPoint).Port;
+
                 onConnect?.Invoke(this);
             }
             catch (Exception ex)
