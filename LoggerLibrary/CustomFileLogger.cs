@@ -13,7 +13,7 @@ namespace LoggerLibrary
         public CustomFileLogger(string categoryName)
         {
             _filePath = Environment.GetFolderPath(
-                  Environment.SpecialFolder.ApplicationData)
+                  Environment.SpecialFolder.MyDocuments)
                   + Path.DirectorySeparatorChar
                   + $"CS3500-{categoryName}.log";
         }

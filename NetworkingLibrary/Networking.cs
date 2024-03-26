@@ -10,52 +10,68 @@ namespace Communications
 {
     public class Networking
     {
-        private TcpClient tcpClient;
-        private readonly ILogger logger;
-        private readonly ReportConnectionEstablished onConnect;
-        private readonly ReportDisconnect onDisconnect;
-        private readonly ReportMessageArrived onMessage;
-        private CancellationTokenSource cancellationTokenSource;
+        // Delegates
+        public delegate void ReportMessageArrived(Networking channel, string message); //callback delegate for when messages arrive
+        public delegate void ReportDisconnect(Networking channel); //callback delegate for when a client disconnects
+        public delegate void ReportConnectionEstablished(Networking channel); //callback delegate for when a client connects to a listener
+        ReportMessageArrived onMessage;
+        ReportDisconnect onDisconnect;
+        ReportConnectionEstablished onConnect;
+
+        public TcpClient _tcpClient;
+        private readonly ILogger _logger;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public Networking(ILogger logger,
             ReportConnectionEstablished onConnect,
             ReportDisconnect onDisconnect,
             ReportMessageArrived onMessage)
         {
-            this.logger = logger;
+            this._logger = logger;
             this.onConnect = onConnect;
             this.onDisconnect = onDisconnect;
             this.onMessage = onMessage;
+            logger.LogTrace("Networking constructor built");
         }
 
         public string ID { get; set; }
 
-        public bool IsConnected => tcpClient?.Connected ?? false;
+        public bool IsConnected => _tcpClient?.Connected ?? false;
 
         public bool IsWaitingForClients { get; private set; }
 
-        public string RemoteAddressPort => IsConnected ? tcpClient.Client.RemoteEndPoint.ToString() : "Disconnected";
+        public string RemoteAddressPort => IsConnected ? _tcpClient.Client.RemoteEndPoint.ToString() : "Disconnected";
 
-        public string LocalAddressPort => IsConnected ? tcpClient.Client.LocalEndPoint.ToString() : "Disconnected";
+        public string LocalAddressPort => IsConnected ? _tcpClient.Client.LocalEndPoint.ToString() : "Disconnected";
 
         public async Task ConnectAsync(string host, int port)
         {
             try
             {
-                tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(host, port);
-                onConnect?.Invoke(this);
+                /// If the connection happens to already be established, this is a NOP (i.e., nothing happens).
+                if (_tcpClient is null) 
+                {
+                    _tcpClient = new TcpClient();
+                    await _tcpClient.ConnectAsync(host, port);
+
+                    ID = _tcpClient.Client.RemoteEndPoint.ToString();
+
+                    onConnect?.Invoke(this);
+
+                    _logger.LogDebug("ConnectAsunc succesful");
+                }
             }
             catch (Exception ex)
             {
-                logger.LogError($"Connection error: {ex.Message}");
+                _logger.LogError($"Connection error: {ex.Message}");
                 throw;
             }
         }
 
         public void Disconnect()
         {
-            tcpClient?.Close();
+            _tcpClient?.Close();
+            // call the delegate to show the right noti
             onDisconnect?.Invoke(this);
         }
 
@@ -65,7 +81,7 @@ namespace Communications
             {
                 while (IsConnected)
                 {
-                    NetworkStream stream = tcpClient.GetStream();
+                    NetworkStream stream = _tcpClient.GetStream();
                     byte[] buffer = new byte[1024];
                     int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
@@ -77,7 +93,7 @@ namespace Communications
             }
             catch (Exception ex)
             {
-                logger.LogError($"Error handling incoming data: {ex.Message}");
+                _logger.LogError($"Error handling incoming data: {ex.Message}");
                 onDisconnect?.Invoke(this);
             }
         }
@@ -88,16 +104,16 @@ namespace Communications
             {
                 if (!IsConnected)
                 {
-                    logger.LogError("Cannot send message, not connected.");
+                    _logger.LogError("Cannot send message, not connected.");
                     return;
                 }
 
                 byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("\n", "\\n"));
-                await tcpClient.GetStream().WriteAsync(buffer, 0, buffer.Length);
+                await _tcpClient.GetStream().WriteAsync(buffer, 0, buffer.Length);
             }
             catch (Exception ex)
             {
-                logger.LogError($"Error sending message: {ex.Message}");
+                _logger.LogError($"Error sending message: {ex.Message}");
                 onDisconnect?.Invoke(this);
             }
         }
@@ -109,28 +125,28 @@ namespace Communications
                 IsWaitingForClients = true;
                 TcpListener listener = new TcpListener(System.Net.IPAddress.Any, port);
                 listener.Start();
-                cancellationTokenSource = new CancellationTokenSource();
+                _cancellationTokenSource = new CancellationTokenSource();
 
                 while (IsWaitingForClients)
                 {
                     TcpClient client = await listener.AcceptTcpClientAsync();
-                    Networking newClient = new Networking(logger, onConnect, onDisconnect, onMessage);
-                    newClient.tcpClient = client;
+                    Networking newClient = new Networking(_logger, onConnect, onDisconnect, onMessage);
+                    newClient._tcpClient = client;
 
-                    Task.Run(() => newClient.HandleIncomingDataAsync(infinite), cancellationTokenSource.Token);
+                    Task.Run(() => newClient.HandleIncomingDataAsync(infinite), _cancellationTokenSource.Token);
                     onConnect?.Invoke(newClient);
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError($"Error waiting for clients: {ex.Message}");
+                _logger.LogError($"Error waiting for clients: {ex.Message}");
             }
         }
 
         public void StopWaitingForClients()
         {
             IsWaitingForClients = false;
-            cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Cancel();
         }
     }
 }
