@@ -1,5 +1,8 @@
 ﻿using Communications;
 using Microsoft.Extensions.Logging;
+using System.Net.Sockets;
+using System.Net;
+using System.Threading.Channels;
 
 namespace ChatServer
 {
@@ -9,10 +12,13 @@ namespace ChatServer
         private Networking _networking;
         private List<Networking> _clients;
         private int _port = 11000;
+        public string MachineName { get; set; }
+        public string IPAddress { get; set; }
         public MainPage(ILogger<MainPage> logger)
         {
             
             InitializeComponent();
+            _clients = new List<Networking>();
             _logger = logger;
             // Initialize an instance of Networking
             _networking = new Networking( logger,
@@ -20,11 +26,39 @@ namespace ChatServer
                                          OnDisconnect,
                                          OnMessageReceived);
             _ = _networking.WaitForClientsAsync(_port, true);
+            MachineName = Environment.MachineName;
+            IPAddress = GetIPAddress();
+            this.BindingContext = this;
             _logger.LogInformation($"Main Page Constructor");
-            this.BindingContext = _networking;
-
         }
+        private string GetIPAddress()
+        {
+            string ipAddress = string.Empty;
+            try
+            {
+                // Get the host name of the local machine
+                string hostName = Dns.GetHostName();
 
+                // Get the IP addresses associated with the host name
+                IPAddress[] addresses = Dns.GetHostAddresses(hostName);
+
+                // Find the IPv4 address
+                ipAddress = addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+
+                if (ipAddress == null)
+                {
+                    // If no IPv4 address found, return an error message
+                    ipAddress = "No IPv4 address found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions and log the error
+                Console.WriteLine($"Error getting IP address: {ex.Message}");
+                ipAddress = "Error getting IP address.";
+            }
+            return ipAddress;
+        }
         // Event handlers for networking events
 
         /// <summary>
@@ -51,16 +85,13 @@ namespace ChatServer
         private void OnDisconnect(Networking channel)
         {
             // Remove clients from the list
-            if (_clients is not null)
+            _clients.Remove(channel);
+            // Add a noti to message
+            Dispatcher.Dispatch(() =>
             {
-                _clients.Remove(channel);
-                // Add a noti to message
-                Dispatcher.Dispatch(() =>
-                {
-                    message.Text += channel.ID + "has disconnected from sever";
-                });
-                _logger.LogDebug("server OnDisconnect");
-            }
+                message.Text += channel.ID + "has disconnected from sever";
+            });
+            _logger.LogDebug("server OnDisconnect");
         }
 
         private void OnMessageReceived(Networking channel, string message)
@@ -72,6 +103,10 @@ namespace ChatServer
         private void Shutdown_Click(object sender, EventArgs e)
         {
             _logger.LogDebug("Shut down button clicked");
+            Dispatcher.Dispatch(() =>
+            {
+                message.Text += "Server shut down";
+            });
             _networking.Disconnect();
             // Clean the list
             participantUpdate();
@@ -85,13 +120,13 @@ namespace ChatServer
             {
                 participantList.Text = "";
             });
-            //Update the list
-            foreach (var channel in _clients)
-            {
-                // Add the name and the IP address
-                participantList.Text+= channel.ID + channel._tcpClient.Client.RemoteEndPoint;
-            }
-            _logger.LogDebug("Participant list updated");
+                //Update the list
+                foreach (var channel in _clients)
+                {
+                    // Add the name and the IP address
+                    participantList.Text += channel.ID + channel._tcpClient.Client.RemoteEndPoint;
+                }
+                _logger.LogDebug("Participant list updated");
         }
     }
 
