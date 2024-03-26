@@ -20,11 +20,11 @@
             <Label Text="Server Information" FontSize="20" HorizontalOptions="Start" Margin="0,0,0,10"/>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Server Name: " VerticalOptions="Center"/>
-                <Entry Text="LAPTOP-3M5U5422" VerticalOptions="Center"/>
+                <Entry Text="{Binding MachineName}" VerticalOptions="Center"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="IP Address: " VerticalOptions="Center"/>
-                <Entry Text="192.168.50.201" VerticalOptions="Center"/>
+                <Entry Text= "{Binding IPAddress}" VerticalOptions="Center"/>
             </StackLayout>
         </StackLayout>
 
