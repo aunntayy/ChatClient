@@ -19,15 +19,10 @@ namespace ChatServer
                                          OnConnection,
                                          OnDisconnect,
                                          OnMessageReceived);
-            _networking.WaitForClientsAsync(_port, true);
+            _ = _networking.WaitForClientsAsync(_port, true);
             _logger.LogInformation($"Main Page Constructor");
             this.BindingContext = _networking;
 
-        }
-        // Shut down server
-        private void Shutdown_Click(object sender, EventArgs e)
-        {
-            _networking.Disconnect();
         }
 
         // Event handlers for networking events
@@ -56,13 +51,47 @@ namespace ChatServer
         private void OnDisconnect(Networking channel)
         {
             // Remove clients from the list
-            // Add a noti to message
-            //
+            if (_clients is not null)
+            {
+                _clients.Remove(channel);
+                // Add a noti to message
+                Dispatcher.Dispatch(() =>
+                {
+                    message.Text += channel.ID + "has disconnected from sever";
+                });
+                _logger.LogDebug("server OnDisconnect");
+            }
         }
 
         private void OnMessageReceived(Networking channel, string message)
         {
             // Update UI if needed
+        }
+
+        // Shut down server
+        private void Shutdown_Click(object sender, EventArgs e)
+        {
+            _logger.LogDebug("Shut down button clicked");
+            _networking.Disconnect();
+            // Clean the list
+            participantUpdate();
+        }
+        
+        // Helper method to update participant list
+        private void participantUpdate() 
+        {
+            // Clear the list
+            Dispatcher.Dispatch(() =>
+            {
+                participantList.Text = "";
+            });
+            //Update the list
+            foreach (var channel in _clients)
+            {
+                // Add the name and the IP address
+                participantList.Text+= channel.ID + channel._tcpClient.Client.RemoteEndPoint;
+            }
+            _logger.LogDebug("Participant list updated");
         }
     }
 

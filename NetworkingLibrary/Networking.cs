@@ -18,7 +18,7 @@ namespace Communications
         ReportDisconnect onDisconnect;
         ReportConnectionEstablished onConnect;
 
-        private TcpClient _tcpClient;
+        public TcpClient _tcpClient;
         private readonly ILogger _logger;
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -71,6 +71,7 @@ namespace Communications
         public void Disconnect()
         {
             _tcpClient?.Close();
+            // call the delegate to show the right noti
             onDisconnect?.Invoke(this);
         }
 
