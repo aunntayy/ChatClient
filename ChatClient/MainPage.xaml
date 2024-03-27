@@ -26,7 +26,7 @@
                 <Entry x:Name="userName" Text=""  WidthRequest="100" HeightRequest="44" VerticalOptions="Center"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Button x:Name="Connect" Text="Connect to server"></Button>
+                <Button Clicked="Connect" Text="Connect to server"></Button>
             </StackLayout>
 
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
