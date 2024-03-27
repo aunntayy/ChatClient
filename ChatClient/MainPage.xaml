@@ -23,10 +23,10 @@
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Your Name" VerticalOptions="Center"/>
-                <Entry Text=""  WidthRequest="100" HeightRequest="44" VerticalOptions="Center"/>
+                <Entry x:Name="userName" Text=""  WidthRequest="100" HeightRequest="44" VerticalOptions="Center"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Button Text="Connect to server"></Button>
+                <Button x:Name="Connect" Text="Connect to server"></Button>
             </StackLayout>
 
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
@@ -36,7 +36,7 @@
         </StackLayout>
 
      
-        <!-- Message list -->
+     
         <!-- Retrieve participant -->
         <StackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Editor 
