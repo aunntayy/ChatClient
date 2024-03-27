@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading.Channels;
+using System.Text;
+using System.Collections.Immutable;
 
 namespace ChatServer
 {
@@ -73,7 +75,7 @@ namespace ChatServer
             // Update message and participant list
             Dispatcher.Dispatch(() =>{ 
                 participantList.Text += channel.ID;
-                message.Text += channel.ID + "has connected to sever";
+                message.Text += channel.ID + "has connected to sever" + Environment.NewLine;
             });
             _logger.LogDebug("server OnConnection");
         }
@@ -89,14 +91,44 @@ namespace ChatServer
             // Add a noti to message
             Dispatcher.Dispatch(() =>
             {
-                message.Text += channel.ID + "has disconnected from sever";
+                message.Text += channel.ID + "has disconnected from sever" + Environment.NewLine;
             });
             _logger.LogDebug("server OnDisconnect");
         }
 
         private void OnMessageReceived(Networking channel, string message)
         {
-            // Update UI if needed
+            // Command name [name]
+            if (message.StartsWith("Command Name")) 
+            {
+                // Find the index of the opening bracket '['
+                int startIndex = message.IndexOf('[');
+                if (startIndex != -1)
+                {
+                    // Find the index of the closing bracket ']' starting from the index after the opening bracket
+                    int endIndex = message.IndexOf(']', startIndex + 1);
+                    if (endIndex != -1)
+                    {
+                        // Extract the substring between the brackets
+                        string name = message.Substring(startIndex + 1, endIndex - startIndex - 1);
+                        // Assign the extracted name to the channel's ID property
+                        channel.ID = name;
+                    }
+                }
+            }
+            // Command Participants
+            // send a list of participants back to the requesting client:
+            if (message.StartsWith("Command Participants")) 
+            {
+                StringBuilder participantList = new StringBuilder();
+                foreach (var client in _clients) 
+                {
+                    participantList.Append("[" + _clients + "]");
+                }
+                channel.SendAsync(participantList.ToString());
+            }
+            // Command Participants [name1], [name2], [name3]
+
         }
 
         // Shut down server
@@ -105,7 +137,7 @@ namespace ChatServer
             _logger.LogDebug("Shut down button clicked");
             Dispatcher.Dispatch(() =>
             {
-                message.Text += "Server shut down";
+                message.Text += "Server shut down" + Environment.NewLine;
             });
             _networking.Disconnect();
             // Clean the list
