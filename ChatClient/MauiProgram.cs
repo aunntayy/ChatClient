@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using LoggerLibrary;
+using Microsoft.Extensions.Logging;
 
 namespace ChatClient
 {
@@ -13,12 +14,13 @@ namespace ChatClient
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                });
+                }).Services.AddLogging(configure =>
+                {
+                    configure.AddDebug();
+                    configure.AddProvider(new CustomFileLoggerProvider());
+                    configure.SetMinimumLevel(LogLevel.Trace);
 
-#if DEBUG
-    		builder.Logging.AddDebug();
-#endif
-
+                }).AddTransient<MainPage>();
             return builder.Build();
         }
     }
