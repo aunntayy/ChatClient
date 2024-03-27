@@ -34,7 +34,8 @@
             <Editor VerticalOptions="FillAndExpand"
                     x:Name="participantList"
                     IsReadOnly="True"
-                    BackgroundColor="White"/>
+                    BackgroundColor="White"
+                    TextColor="Black"/>
         </StackLayout>
 
         <!-- Messages List -->
@@ -44,7 +45,8 @@
                     HorizontalOptions="FillAndExpand"
                     IsReadOnly="True"
                     BackgroundColor="White"
-                    x:Name="message"/>
+                    x:Name="message"
+                    TextColor="Black"/>
         </StackLayout>
 
         <!-- Shutdown Server Button -->
