@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Channels;
 using System.Text;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace ChatServer
 {
@@ -99,7 +100,7 @@ namespace ChatServer
         private void OnMessageReceived(Networking channel, string message)
         {
             // Command name [name]
-            if (message.StartsWith("Command Name")) 
+            if (message.StartsWith("Command Name"))
             {
                 // Find the index of the opening bracket '['
                 int startIndex = message.IndexOf('[');
@@ -111,8 +112,31 @@ namespace ChatServer
                     {
                         // Extract the substring between the brackets
                         string name = message.Substring(startIndex + 1, endIndex - startIndex - 1);
-                        // Assign the extracted name to the channel's ID property
-                        channel.ID = name;
+                        bool nameExists = false;
+
+                        // Check if the name already exists
+                        foreach (var client in _clients)
+                        {
+                            if (client.ID == name)
+                            {
+                                nameExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!nameExists)
+                        {
+                            // Assign the extracted name to the channel's ID property
+                            channel.ID = name;
+                            // Update the list
+                            participantUpdate();
+                        }
+                        else
+                        {
+                            channel.SendAsync("NAME REJECTED");
+                        }
+
+                        _logger.LogDebug("Send participants list to client");
                     }
                 }
             }
@@ -126,9 +150,8 @@ namespace ChatServer
                     participantList.Append("[" + _clients + "]");
                 }
                 channel.SendAsync(participantList.ToString());
+                _logger.LogDebug("Send participants list to client");
             }
-            // Command Participants [name1], [name2], [name3]
-
         }
 
         // Shut down server
