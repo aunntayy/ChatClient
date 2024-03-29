@@ -148,13 +148,10 @@ namespace Communications
                 if (_tcpClient is null) 
                 {
                     _tcpClient = new TcpClient();
+                    onConnect(this);
                     await _tcpClient.ConnectAsync(host, port);
-
-                    ID = _tcpClient.Client.RemoteEndPoint.ToString();
-
-                    onConnect?.Invoke(this);
-
-                    _logger.LogDebug("ConnectAsunc succesful");
+                    
+                    _logger.LogDebug("Connect Async succesful");
                 }
             }
             catch (Exception ex)

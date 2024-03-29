@@ -2,6 +2,7 @@
 using Communications;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
+using System.Net;
 using System.Reflection.PortableExecutable;
 
 namespace ChatClient
@@ -15,45 +16,58 @@ namespace ChatClient
         //Have a way to show who is currently on the server(participants)
         //Have a list of the conversation.
 
-        private Networking _client;
+        private readonly Networking _client;
         private readonly ILogger _logger;
         private const int port = 11000;
         private string host { get; set; }
-
+        private string message {  get; set; }   
         public MainPage(ILogger<MainPage> logger){
+            
             _logger = logger;
-            InitializeComponent();
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
-            host = Environment.MachineName;
-
+            InitializeComponent();
         }
 
 
+       
         //connect button
         private void Connect(object sender, EventArgs e) {
-            _logger.LogDebug("Connect button clicked");
-            _ = _client.ConnectAsync(host, port);
+                 _logger.LogDebug("Connect button clicked");
+              //  host = hostAddress.Text;
+
+                _ = _client.ConnectAsync("10.211.55.3", port);
         }
+
+        //hit enter on message
+        private async void Message(object sender, EventArgs e) {
+            _logger.LogDebug("Message entry");
+            message = textEntry.Text;
+            await _client.SendAsync(message);
+          //  await _client.HandleIncomingDataAsync(true);
+        }
+
+        
 
         private void OnMessage(Networking channel, string message)
         {
-            throw new NotImplementedException();
+            message = this.message;
         }
 
         private void OnDisconnect(Networking channel)
         {
-            throw new NotImplementedException();
+           throw new NotImplementedException();
         }
 
         private void OnConnect(Networking channel)
         {
             _logger.LogDebug("Client on connect called");
-            _ = _client.HandleIncomingDataAsync(true);
+           
             if (userName.Text.Length > 0)
             {
-                channel.ID = userName.Text;
+              channel.ID = userName.Text;
                 _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
             }
+         
         }
     }
 
