@@ -148,9 +148,10 @@ namespace Communications
                 if (_tcpClient is null) 
                 {
                     _tcpClient = new TcpClient();
-                    onConnect(this);
+                   
                     await _tcpClient.ConnectAsync(host, port);
-                    
+                    onConnect(this);
+
                     _logger.LogDebug("Connect Async succesful");
                 }
             }
@@ -326,26 +327,25 @@ namespace Communications
         /// <param name="infinite"> If true, then each client gets a thread that read an infinite number of messages</param>
         public async Task WaitForClientsAsync(int port, bool infinite)
         {
-            try
-            {
-                IsWaitingForClients = true;
-                TcpListener listener = new TcpListener(System.Net.IPAddress.Any, port);
-                listener.Start();
+            IsWaitingForClients = true;
+            TcpListener listener = new TcpListener(System.Net.IPAddress.Any, port);
+            listener.Start();
+            try { 
                 _cancellationTokenSource = new CancellationTokenSource();
 
                 while (IsWaitingForClients)
                 {
-                    TcpClient client = await listener.AcceptTcpClientAsync();
                     Networking newClient = new Networking(_logger, onConnect, onDisconnect, onMessage);
-                    newClient._tcpClient = client;
+                    newClient._tcpClient = await listener.AcceptTcpClientAsync();
+                    newClient.onConnect(newClient);
 
-                    Task.Run(() => newClient.HandleIncomingDataAsync(infinite), _cancellationTokenSource.Token);
-                    onConnect?.Invoke(newClient);
+                    new Thread(async () => { await newClient.HandleIncomingDataAsync(infinite); }).Start();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error waiting for clients: {ex.Message}");
+                listener.Stop();
             }
         }
 
