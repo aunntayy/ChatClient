@@ -155,21 +155,53 @@ namespace ChatServer
                 channel.SendAsync(participantList.ToString());
                 _logger.LogDebug("Send participants list to client");
             }
+            else
+            {
+                foreach (var client in _clients)
+                {
+                    channel.SendAsync(message);
+                }
+                _logger.LogDebug("Send message to all other clients");
+            }
         }
 
         // Shut down server
         private void Shutdown_Click(object sender, EventArgs e)
         {
-            _logger.LogDebug("Shut down button clicked");
-            Dispatcher.Dispatch(() =>
+            if (shutdownButton.Text == "Shutdown Server")
             {
-                message.Text += "Server shut down" + Environment.NewLine;
-            });
-            _networking.Disconnect();
-            // Clean the list
-            participantUpdate();
+                _logger.LogDebug("Shut down button clicked");
+                shutdownButton.Text = "Start Server";
+                Dispatcher.Dispatch(() =>
+                {
+                    message.Text += "Server shut down" + Environment.NewLine;
+                });
+                // Disconnect everyone
+                List<Networking> copy = new List<Networking>(_clients);
+                foreach (Networking client in copy)
+                {
+                    client.Disconnect();
+                }
+                // Clear the list 
+                _clients.Clear();
+                // Stop waiting for the server
+                _networking.StopWaitingForClients();
+                // Clean the list
+                participantUpdate();
+            }
+            else
+            {
+                _logger.LogDebug("Start server button clicked");
+                Dispatcher.Dispatch(() =>
+                {
+                    message.Text += "Server started" + Environment.NewLine;
+                });
+                shutdownButton.Text = "Shutdown Server";
+                _networking.WaitForClientsAsync(_port, true);
+            }
+
         }
-        
+
         // Helper method to update participant list
         private void participantUpdate() 
         {
