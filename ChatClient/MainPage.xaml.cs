@@ -35,7 +35,7 @@ namespace ChatClient
                  _logger.LogDebug("Connect button clicked");
               //  host = hostAddress.Text;
 
-                _ = _client.ConnectAsync("10.211.55.3", port);
+                _ = _client.ConnectAsync("192.168.50.201", port);
         }
 
         //hit enter on message
