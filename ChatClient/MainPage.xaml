@@ -19,11 +19,11 @@
             <Label Text="Server Information" FontSize="20" HorizontalOptions="Start" Margin="0,0,0,10"/>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Server Name/Address:" VerticalOptions="Center"/>
-                <Entry Text="" WidthRequest="100" HeightRequest="44" VerticalOptions="Center"/>
+                <Entry x:Name ="hostAddress" Text="10.211.55.3" WidthRequest="100" HeightRequest="44" VerticalOptions="Center"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Your Name" VerticalOptions="Center"/>
-                <Entry x:Name="userName" Text=""  WidthRequest="100" HeightRequest="44" VerticalOptions="Center"/>
+                <Entry x:Name="userName" Text="aun"  WidthRequest="100" HeightRequest="44" VerticalOptions="Center" />
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Button Clicked="Connect" Text="Connect to server"></Button>
@@ -31,19 +31,19 @@
 
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Type something"  VerticalOptions="Center"></Label>
-                <Entry Text="" WidthRequest="500"></Entry>
+                <Entry x:Name ="textEntry" Text=""  WidthRequest="500" Completed="Message"></Entry>
             </StackLayout>
         </StackLayout>
 
      
      
-        <!-- Retrieve participant -->
+        <!-- message board -->
         <StackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <Editor 
                 VerticalOptions="Center"               
                 WidthRequest="700"
                 HeightRequest="500"
-                x:Name="participantList"
+                x:Name="messageBoard"
                 IsReadOnly="True"
                 BackgroundColor="White"/>
         </StackLayout>
@@ -56,7 +56,7 @@
                   HorizontalOptions="FillAndExpand"
                   IsReadOnly="True"
                   BackgroundColor="Beige"
-                  x:Name="message"/>
+                  x:Name="participantList"/>
             
             <Button   Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300"/>
           

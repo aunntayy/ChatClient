@@ -19,7 +19,6 @@ namespace ChatServer
         public string IPAddress { get; set; }
         public MainPage(ILogger<MainPage> logger)
         {
-            
             InitializeComponent();
             _clients = new List<Networking>();
             _logger = logger;
@@ -71,14 +70,18 @@ namespace ChatServer
         /// <param name="channel"></param>
         private void OnConnection(Networking channel)
         {
-            // Add to client list
-            _clients.Add(channel);
+            // Add to client list         
+                _clients.Add(channel);
+
             // Update message and participant list
-            Dispatcher.Dispatch(() =>{ 
-                participantList.Text += channel.ID;
-                message.Text += channel.ID + "has connected to sever" + Environment.NewLine;
-            });
-            _logger.LogDebug("server OnConnection");
+        
+                Dispatcher.Dispatch(() => {
+                    participantList.Text += channel.ID;
+                    message.Text += channel.ID + "has connected to sever" + Environment.NewLine;
+                });
+                _logger.LogDebug("server OnConnection");
+            
+           
         }
 
         /// <summary>
