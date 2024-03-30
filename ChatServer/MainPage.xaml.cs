@@ -21,8 +21,6 @@ namespace ChatServer
         public string IPAddress { get; set; }
         public MainPage(ILogger<MainPage> logger)
         {
-
-            InitializeComponent();
             _clients = new List<Networking>();
             _logger = logger;
             // Initialize an instance of Networking
@@ -35,6 +33,7 @@ namespace ChatServer
             IPAddress = GetIPAddress();
             this.BindingContext = this;
             _logger.LogInformation($"Main Page Constructor");
+            InitializeComponent();
         }
         private string GetIPAddress()
         {
@@ -224,7 +223,7 @@ namespace ChatServer
             foreach (var channel in _clients)
             {
                 // Add the name and the IP address
-                participantList.Text += channel.ID + channel._tcpClient.Client.RemoteEndPoint;
+                participantList.Text += channel.RemoteAddressPort + channel._tcpClient.Client.RemoteEndPoint;
             }
             _logger.LogDebug("Participant list updated");
         }

@@ -27,9 +27,6 @@ namespace ChatClient
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
             InitializeComponent();
         }
-
-
-       
         //connect button
         private void Connect(object sender, EventArgs e) {
                  _logger.LogDebug("Connect button clicked");
@@ -45,9 +42,6 @@ namespace ChatClient
             await _client.SendAsync(message);
           //  await _client.HandleIncomingDataAsync(true);
         }
-
-        
-
         private void OnMessage(Networking channel, string message)
         {
             message = this.message;
