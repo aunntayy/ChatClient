@@ -10,6 +10,7 @@ namespace LoggerLibrary
     public class CustomFileLogger : ILogger
     {
         private readonly string _filePath;
+        private readonly object _lock = new object();
         public CustomFileLogger(string categoryName)
         {
             _filePath = Environment.GetFolderPath(
@@ -30,8 +31,14 @@ namespace LoggerLibrary
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            string logMessage = $"{DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt")} ({System.Threading.Thread.CurrentThread.ManagedThreadId}) - {logLevel} - {formatter(state, exception)}{Environment.NewLine}";
-            File.AppendAllText(_filePath, logMessage);
+            Task.Factory.StartNew(() => {
+                lock (_lock) {
+                    string logMessage = $"{DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt")} ({System.Threading.Thread.CurrentThread.ManagedThreadId}) - {logLevel} - {formatter(state, exception)}{Environment.NewLine}";
+                    File.AppendAllText(_filePath, logMessage);
+                }
+            });
+           
+           
         }
     }
 

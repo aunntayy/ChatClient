@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using System.Net;
 using System.Reflection.PortableExecutable;
+using System.Threading.Channels;
 
 namespace ChatClient
 {
@@ -33,9 +34,10 @@ namespace ChatClient
         //connect button
         private void Connect(object sender, EventArgs e) {
                  _logger.LogDebug("Connect button clicked");
-              //  host = hostAddress.Text;
-
-                _ = _client.ConnectAsync("192.168.50.201", port);
+            //  host = hostAddress.Text;
+            //    _client.ID = userName.Text; 
+            _ = _client.ConnectAsync("10.211.55.3", port);
+            _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
         }
 
         //hit enter on message
@@ -43,19 +45,25 @@ namespace ChatClient
             _logger.LogDebug("Message entry");
             message = textEntry.Text;
             await _client.SendAsync(message);
-          //  await _client.HandleIncomingDataAsync(true);
-        }
-
         
+            if(_client.IsConnected == false) {
+                messageBoard.Text += "Server gone bruv" + Environment.NewLine;
+            }
+        }
 
         private void OnMessage(Networking channel, string message)
-        {
-            message = this.message;
+        { 
+            messageBoard.Text += channel.ID +": "+ message + Environment.NewLine;
+            _ = _client.SendAsync(message);
         }
+
+       
 
         private void OnDisconnect(Networking channel)
         {
-           throw new NotImplementedException();
+          _logger.LogDebug($"Disconnecting {channel}");
+           ConnectBttn.IsEnabled = false;
+            
         }
 
         private void OnConnect(Networking channel)
@@ -65,7 +73,7 @@ namespace ChatClient
             if (userName.Text.Length > 0)
             {
               channel.ID = userName.Text;
-                _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
+              //_ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
             }
          
         }

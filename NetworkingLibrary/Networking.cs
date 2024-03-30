@@ -148,7 +148,8 @@ namespace Communications
                 if (_tcpClient is null) 
                 {
                     _tcpClient = new TcpClient();
-                   
+
+                  
                     await _tcpClient.ConnectAsync(host, port);
                     onConnect(this);
 
@@ -222,8 +223,8 @@ namespace Communications
                 {
                     NetworkStream stream = _tcpClient.GetStream();
                     byte[] buffer = new byte[1024];
-                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    int bytesRead = await stream.ReadAsync(buffer);
+                    string message = Encoding.UTF8.GetString(buffer);
                     onMessage?.Invoke(this, message);
 
                     if (!infinite)
@@ -281,9 +282,10 @@ namespace Communications
                     _logger.LogError("Cannot send message, not connected.");
                     return;
                 }
-
+                //onMessage.Invoke(this,text);
+                NetworkStream stream = _tcpClient.GetStream();
                 byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("\n", "\\n"));
-                await _tcpClient.GetStream().WriteAsync(buffer, 0, buffer.Length);
+                await stream.WriteAsync(buffer);
             }
             catch (Exception ex)
             {
