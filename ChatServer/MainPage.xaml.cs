@@ -6,6 +6,7 @@ using System.Threading.Channels;
 using System.Text;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net.Http;
 
 namespace ChatServer
 {
@@ -15,15 +16,17 @@ namespace ChatServer
         private Networking _networking;
         private List<Networking> _clients;
         private int _port = 11000;
+        private TcpListener network_listener;
         public string MachineName { get; set; }
         public string IPAddress { get; set; }
         public MainPage(ILogger<MainPage> logger)
         {
+
             InitializeComponent();
             _clients = new List<Networking>();
             _logger = logger;
             // Initialize an instance of Networking
-            _networking = new Networking( logger,
+            _networking = new Networking(logger,
                                          OnConnection,
                                          OnDisconnect,
                                          OnMessageReceived);
@@ -70,18 +73,17 @@ namespace ChatServer
         /// <param name="channel"></param>
         private void OnConnection(Networking channel)
         {
-            // Add to client list         
+            // Add to client list
+            lock (this._clients)
+            {
                 _clients.Add(channel);
-
+            }
             // Update message and participant list
-        
-                Dispatcher.Dispatch(() => {
-                    participantList.Text += channel.ID;
-                    message.Text += channel.ID + "has connected to sever" + Environment.NewLine;
-                });
-                _logger.LogDebug("server OnConnection");
-            
-           
+            Dispatcher.Dispatch(() => {
+                participantList.Text += channel.ID;
+                message.Text += channel.ID + " has connected to sever" + Environment.NewLine;
+            });
+            _logger.LogDebug("server OnConnection");
         }
 
         /// <summary>
@@ -90,14 +92,17 @@ namespace ChatServer
         /// <param name="channel"></param>
         private void OnDisconnect(Networking channel)
         {
-            // Remove clients from the list
-            _clients.Remove(channel);
-            // Add a noti to message
-            Dispatcher.Dispatch(() =>
+            if (_clients is not null)
             {
-                message.Text += channel.ID + "has disconnected from sever" + Environment.NewLine;
-            });
-            _logger.LogDebug("server OnDisconnect");
+                // Remove clients from the list
+                _clients.Remove(channel);
+                // Add a noti to message
+                Dispatcher.Dispatch(() =>
+                {
+                    message.Text += channel.ID + " has disconnected from sever" + Environment.NewLine;
+                });
+                _logger.LogDebug("server OnDisconnect");
+            }
         }
 
         private void OnMessageReceived(Networking channel, string message)
@@ -145,14 +150,19 @@ namespace ChatServer
             }
             // Command Participants
             // send a list of participants back to the requesting client:
-            if (message.StartsWith("Command Participants")) 
+            if (message.StartsWith("Command Participants"))
             {
                 StringBuilder participantList = new StringBuilder();
-                foreach (var client in _clients) 
+                foreach (var client in _clients)
                 {
                     participantList.Append("[" + _clients + "]");
                 }
-                channel.SendAsync(participantList.ToString());
+                //Send to each client a message
+                foreach (var client in _clients)
+                {
+                    channel.SendAsync(message);
+                    channel.SendAsync(participantList.ToString());
+                }
                 _logger.LogDebug("Send participants list to client");
             }
             else
@@ -203,20 +213,20 @@ namespace ChatServer
         }
 
         // Helper method to update participant list
-        private void participantUpdate() 
+        private void participantUpdate()
         {
             // Clear the list
             Dispatcher.Dispatch(() =>
             {
                 participantList.Text = "";
             });
-                //Update the list
-                foreach (var channel in _clients)
-                {
-                    // Add the name and the IP address
-                    participantList.Text += channel.ID + channel._tcpClient.Client.RemoteEndPoint;
-                }
-                _logger.LogDebug("Participant list updated");
+            //Update the list
+            foreach (var channel in _clients)
+            {
+                // Add the name and the IP address
+                participantList.Text += channel.ID + channel._tcpClient.Client.RemoteEndPoint;
+            }
+            _logger.LogDebug("Participant list updated");
         }
     }
 

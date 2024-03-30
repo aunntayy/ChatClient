@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="ChatClient.MainPage">
+             x:Class="ChatServer.MainPage"
+             BackgroundColor="Black">
 
     <Grid Padding="20">
         <Grid.RowDefinitions>
@@ -18,50 +19,38 @@
         <StackLayout Grid.Row="0" Grid.Column="0">
             <Label Text="Server Information" FontSize="20" HorizontalOptions="Start" Margin="0,0,0,10"/>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Label Text="Server Name/Address:" VerticalOptions="Center"/>
-                <Entry x:Name ="hostAddress" Text="10.211.55.3" WidthRequest="100" HeightRequest="44" VerticalOptions="Center"/>
+                <Label Text="Server Name: " VerticalOptions="Center"/>
+                <Entry Text="{Binding MachineName}" VerticalOptions="Center"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Label Text="Your Name" VerticalOptions="Center"/>
-                <Entry x:Name="userName" Text="aun"  WidthRequest="100" HeightRequest="44" VerticalOptions="Center" />
-            </StackLayout>
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Button Clicked="Connect" Text="Connect to server"></Button>
-            </StackLayout>
-
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Label Text="Type something"  VerticalOptions="Center"></Label>
-                <Entry x:Name ="textEntry" Text=""  WidthRequest="500" Completed="Message"></Entry>
+                <Label Text="IP Address: " VerticalOptions="Center"/>
+                <Entry Text= "{Binding IPAddress}" VerticalOptions="Center"/>
             </StackLayout>
         </StackLayout>
 
-     
-     
-        <!-- message board -->
-        <StackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
-            <Editor 
-                VerticalOptions="Center"               
-                WidthRequest="700"
-                HeightRequest="500"
-                x:Name="messageBoard"
-                IsReadOnly="True"
-                BackgroundColor="White"/>
+        <!-- Participants List -->
+        <StackLayout Grid.Row="1" Grid.Column="0" Margin="0,20,0,0">
+            <Label Text="Participants" FontSize="20" HorizontalOptions="Start" Margin="0,20,0,10"/>
+            <Editor VerticalOptions="FillAndExpand"
+                    x:Name="participantList"
+                    IsReadOnly="True"
+                    BackgroundColor="White"
+                    TextColor="Black"/>
         </StackLayout>
 
-        <!-- Retrieve participant -->
-        <StackLayout Grid.Row="0" Grid.Column="1" >
-            <Editor 
-                  WidthRequest="500"
-                  HeightRequest="400"
-                  HorizontalOptions="FillAndExpand"
-                  IsReadOnly="True"
-                  BackgroundColor="Beige"
-                  x:Name="participantList"/>
-            
-            <Button   Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300"/>
-          
-           
+        <!-- Messages List -->
+        <StackLayout Grid.RowSpan="2" Grid.Column="1">
+            <Label Text="Messages" FontSize="20" HorizontalOptions="Start" Margin="0,0,0,10"/>
+            <Editor VerticalOptions="FillAndExpand"
+                    HorizontalOptions="FillAndExpand"
+                    IsReadOnly="True"
+                    BackgroundColor="White"
+                    x:Name="message"
+                    TextColor="Black"/>
         </StackLayout>
+
+        <!-- Shutdown Server Button -->
+        <Button x:Name="shutdownButton" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="Shutdown Server" Clicked="Shutdown_Click" Margin="0,20,0,0" HorizontalOptions="Center"/>
     </Grid>
 
 </ContentPage>
