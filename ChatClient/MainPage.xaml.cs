@@ -1,4 +1,4 @@
-﻿
+
 using Communications;
 
 using Microsoft.Extensions.Logging;

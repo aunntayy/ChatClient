@@ -1,4 +1,4 @@
-﻿using Communications;
+using Communications;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 using System.Net;
