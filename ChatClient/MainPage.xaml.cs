@@ -1,5 +1,6 @@
 ﻿
 using Communications;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using System.Net;
@@ -19,6 +20,7 @@ namespace ChatClient
 
         private readonly Networking _client;
         private readonly ILogger _logger;
+  
         private const int port = 11000;
         private string host { get; set; }
         private string message {  get; set; }   
@@ -27,34 +29,45 @@ namespace ChatClient
             _logger = logger;
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
             InitializeComponent();
+          
+            
         }
 
 
-       
+        
         //connect button
         private void Connect(object sender, EventArgs e) {
-                 _logger.LogDebug("Connect button clicked");
+            _logger.LogDebug("Connect button clicked");
             //  host = hostAddress.Text;
             //    _client.ID = userName.Text; 
-            _ = _client.ConnectAsync("10.211.55.3", port);
-            _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
+            Dispatcher.Dispatch(() => {
+                _client.ID = userName.Text;
+                _ = _client.ConnectAsync("10.211.55.3", port);
+            });
         }
 
         //hit enter on message
         private async void Message(object sender, EventArgs e) {
             _logger.LogDebug("Message entry");
             message = textEntry.Text;
+            messageBoard.Text += userName.Text + ": " + message + Environment.NewLine;
             await _client.SendAsync(message);
-        
-            if(_client.IsConnected == false) {
+
+          
+          
+
+            if (_client.IsConnected == false) {
                 messageBoard.Text += "Server gone bruv" + Environment.NewLine;
             }
         }
 
         private void OnMessage(Networking channel, string message)
-        { 
-            messageBoard.Text += channel.ID +": "+ message + Environment.NewLine;
-            _ = _client.SendAsync(message);
+        {
+            if (!message.StartsWith("Command Name")) {
+             
+                
+            }
+           
         }
 
        
@@ -73,9 +86,8 @@ namespace ChatClient
             if (userName.Text.Length > 0)
             {
               channel.ID = userName.Text;
-              //_ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
+              _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
             }
-         
         }
     }
 

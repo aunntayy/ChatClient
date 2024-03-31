@@ -16,6 +16,7 @@ namespace ChatServer
         private Networking _networking;
         private List<Networking> _clients;
         private int _port = 11000;
+        
         private TcpListener network_listener;
         public string MachineName { get; set; }
         public string IPAddress { get; set; }
@@ -89,19 +90,25 @@ namespace ChatServer
             if (_clients is not null)
             {
                 // Remove clients from the list
-                _clients.Remove(channel);
+                lock (this._clients) {
+                    _clients.Remove(channel);
+                }
+               
                 // Add a noti to message
-                Dispatcher.Dispatch(() =>
-                {
-                    messageBoard.Text += channel.ID + " has disconnected from sever" + Environment.NewLine;
+                Device.BeginInvokeOnMainThread(() => {
+                    if (channel != null && channel.ID != null) {
+                        messageBoard.Text += channel.ID + " has disconnected from server" + Environment.NewLine;
+                    } else {
+                        messageBoard.Text += "Unknown client has disconnected from server" + Environment.NewLine;
+                    }
                 });
                 // Update participant list
                 participantUpdate();
                 _logger.LogDebug("server OnDisconnect");
+
+                
             }
         }
-
-        [Obsolete]
         private void OnMessageReceived(Networking channel, string message)
         {
             // Command name [name]
@@ -146,7 +153,7 @@ namespace ChatServer
                 }
             }else {
                 Device.BeginInvokeOnMainThread(() => {
-                    messageBoard.Text += "sth" + ": " + message + "/n";
+                    messageBoard.Text += "sth" + ": " + message + "\r\n";
                 });
             }
             // Command Participants
@@ -201,12 +208,13 @@ namespace ChatServer
                     messageBoard.Text += "Server started" + Environment.NewLine;
                 });
                 shutdownButton.Text = "Shutdown Server";
-                _networking.WaitForClientsAsync(_port, true);
+                 _networking.WaitForClientsAsync(_port, true);
             }
 
         }
 
         // Helper method to update participant list
+        
         private void participantUpdate()
         {
             // Clear the list
@@ -217,7 +225,6 @@ namespace ChatServer
             //Update the list
             foreach (var channel in _clients)
             {
-                
                 Device.BeginInvokeOnMainThread(() => {
                     // Add the name and the IP address
                     participantList.Text += channel.ID;

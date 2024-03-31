@@ -148,8 +148,6 @@ namespace Communications
                 if (_tcpClient is null) 
                 {
                     _tcpClient = new TcpClient();
-
-                  
                     await _tcpClient.ConnectAsync(host, port);
                     onConnect(this);
 
@@ -282,9 +280,10 @@ namespace Communications
                     _logger.LogError("Cannot send message, not connected.");
                     return;
                 }
-                //onMessage.Invoke(this,text);
+                
                 NetworkStream stream = _tcpClient.GetStream();
-                byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("\n", "\\n"));
+                byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("/n","//n"));
+             
                 await stream.WriteAsync(buffer);
             }
             catch (Exception ex)
