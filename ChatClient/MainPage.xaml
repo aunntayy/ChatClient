@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChatClient.MainPage">
@@ -26,9 +26,10 @@
                 <Entry x:Name="userName" Text="aun"  WidthRequest="100" HeightRequest="44" VerticalOptions="Center" />
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Button Clicked="Connect" Text="Connect to server"></Button>
+                <Button x:Name="ConnectBttn" Clicked="Connect" Text="Connect to server"></Button>
             </StackLayout>
 
+          
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Type something"  VerticalOptions="Center"></Label>
                 <Entry x:Name ="textEntry" Text=""  WidthRequest="500" Completed="Message"></Entry>
@@ -58,7 +59,7 @@
                   BackgroundColor="Beige"
                   x:Name="participantList"/>
 
-            <Button   Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300"/>
+            <Button x:Name="retrieveUser"  Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300"/>
 
 
         </StackLayout>
