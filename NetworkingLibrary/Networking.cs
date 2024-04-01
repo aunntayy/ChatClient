@@ -150,7 +150,7 @@ namespace Communications
                     _tcpClient = new TcpClient();
                     await _tcpClient.ConnectAsync(host, port);
                     onConnect(this);
-
+                    ID = _tcpClient.Client.RemoteEndPoint.ToString();
                     _logger.LogDebug("Connect Async succesful");
                 }
             }
@@ -176,8 +176,6 @@ namespace Communications
         public void Disconnect()
         {
             _tcpClient?.Close();
-            // call the delegate to show the right noti
-            onDisconnect?.Invoke(this);
         }
 
         /// <summary>
@@ -220,9 +218,9 @@ namespace Communications
                 while (IsConnected)
                 {
                     NetworkStream stream = _tcpClient.GetStream();
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[4096];
                     int bytesRead = await stream.ReadAsync(buffer);
-                    string message = Encoding.UTF8.GetString(buffer);
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     onMessage?.Invoke(this, message);
 
                     if (!infinite)
@@ -337,7 +335,7 @@ namespace Communications
                 while (IsWaitingForClients)
                 {
                     Networking newClient = new Networking(_logger, onConnect, onDisconnect, onMessage);
-                    newClient._tcpClient = await listener.AcceptTcpClientAsync();
+                    newClient._tcpClient = await listener.AcceptTcpClientAsync(_cancellationTokenSource.Token);
                     newClient.onConnect(newClient);
 
                     new Thread(async () => { await newClient.HandleIncomingDataAsync(infinite); }).Start();
