@@ -117,13 +117,31 @@ namespace ChatServer
             if (message.StartsWith("Command Name"))
             {
                 //channel.ID = message.Substring(message.LastIndexOf("[") + 1, message.LastIndexOf("]") - message.LastIndexOf("[") - 1);
-                channel.ID = message.Split(' ').Last().TrimEnd('\n');
-                Dispatcher.Dispatch(() =>
+                string name = message.Split(' ').Last().TrimEnd('\n');
+                // Check if the name already exists
+                bool nameExists = false;
+                foreach (var client in _clients)
                 {
-                    messageBoard.Text += $"{channel.ID} - {message}";
-                    participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
-                });
-                _logger.LogDebug("Send participants list to client");
+                    if (client.ID == name)
+                    {
+                        nameExists = true;
+                        break;
+                    }
+                }
+                if (!nameExists) 
+                {
+                    channel.ID = name;
+                    Dispatcher.Dispatch(() =>
+                    {
+                        messageBoard.Text += $"{channel.ID} - {message}";
+                        participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
+                        _logger.LogDebug(channel.ID + " commanded name");
+                    });
+                } else
+                {
+                    channel.SendAsync("NAME REJECTED");
+                    _logger.LogDebug("Name rejected");
+                }
             }
             else
             {
