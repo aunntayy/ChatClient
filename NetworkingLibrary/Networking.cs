@@ -176,8 +176,6 @@ namespace Communications
         public void Disconnect()
         {
             _tcpClient?.Close();
-            // call the delegate to show the right noti
-            onDisconnect?.Invoke(this);
         }
 
         /// <summary>
@@ -337,7 +335,7 @@ namespace Communications
                 while (IsWaitingForClients)
                 {
                     Networking newClient = new Networking(_logger, onConnect, onDisconnect, onMessage);
-                    newClient._tcpClient = await listener.AcceptTcpClientAsync();
+                    newClient._tcpClient = await listener.AcceptTcpClientAsync(_cancellationTokenSource.Token);
                     newClient.onConnect(newClient);
 
                     new Thread(async () => { await newClient.HandleIncomingDataAsync(infinite); }).Start();

@@ -53,9 +53,6 @@ namespace ChatClient
             messageBoard.Text += userName.Text + ": " + message + Environment.NewLine;
             await _client.SendAsync(message);
 
-          
-          
-
             if (_client.IsConnected == false) {
                 messageBoard.Text += "Server gone bruv" + Environment.NewLine;
             }
@@ -63,13 +60,24 @@ namespace ChatClient
 
         private void OnMessage(Networking channel, string message)
         {
-            if (!message.StartsWith("Command Name")) {
-             
-                
-            }
-           
-        }
+            if (!message.StartsWith("Command Name"))
+            {
 
+
+            }
+            else
+            {
+                lock (this._client)
+                {
+                    Dispatcher.Dispatch(() =>
+                    {
+                            messageBoard.Text += $"{channel.ID} - {message}\n";
+                            //messageBoard.Text += message + Environment.NewLine;
+                    });
+
+                }
+            }
+        }
        
 
         private void OnDisconnect(Networking channel)
