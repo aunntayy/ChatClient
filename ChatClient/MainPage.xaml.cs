@@ -41,7 +41,7 @@ namespace ChatClient
             Dispatcher.Dispatch(() => {
                 _client.ID = userName.Text;
                 _ = _client.ConnectAsync("192.168.50.201", port);
-                _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
+                _ = _client.SendAsync("Command Name" +  userName.Text );
             
             });
         }
