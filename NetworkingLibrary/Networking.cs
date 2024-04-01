@@ -153,7 +153,6 @@ namespace Communications
                     _tcpClient = new TcpClient();
                     await _tcpClient.ConnectAsync(host, port);
                     onConnect(this);
-                    ID = _tcpClient.Client.RemoteEndPoint.ToString();
                     _logger.LogDebug("Connect Async succesful");
                 }
             }
@@ -178,9 +177,7 @@ namespace Communications
         /// </summary>
         public void Disconnect()
         {
-            _tcpClient?.Close();
-            // call the delegate to show the right noti
-            onDisconnect?.Invoke(this);
+           _tcpClient?.Close();
            _cancellationTokenSource.Cancel();
         }
 
@@ -252,7 +249,8 @@ namespace Communications
             catch (Exception ex)
             {
                 _logger.LogError($"Error handling incoming data: {ex.Message}");
-               Disconnect();
+                Disconnect();
+                onDisconnect(this);
             }
         }
 
@@ -310,6 +308,7 @@ namespace Communications
             {
                 _logger.LogError($"Error sending message: {ex.Message}");
                 Disconnect();
+                onDisconnect(this);
             }
         }
 

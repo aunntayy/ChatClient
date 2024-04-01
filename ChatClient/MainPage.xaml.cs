@@ -42,25 +42,26 @@ namespace ChatClient
         //connect button
         private void Connect(object sender, EventArgs e) {
             _logger.LogDebug("Connect button clicked");
-              host = hostAddress.Text;
-            //  _client.ID = userName.Text; 
-            Dispatcher.Dispatch(() => {
-                _client.ID = userName.Text;
-                _ = _client.ConnectAsync(host, port);
-                _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
-            
-            });
+            host = hostAddress.Text;
+            _client.ID = userName.Text;
+            _ = _client.ConnectAsync(host, port);
+            _ = _client.SendAsync("Command Name "  + userName.Text + "\n");
+            if (_client.IsConnected)
+            {
+                // Update the button text to "Connected"
+                Dispatcher.Dispatch(() =>
+                {
+                    ConnectBttn.Text = "Connected";
+                    ConnectBttn.IsEnabled = false;
+                });
+            }
         }
 
         //hit enter on message
         private void Message(object sender, EventArgs e) {
             _logger.LogDebug("Message entry");
             message = textEntry.Text;
-            messageBoard.Text += userName.Text + ": " + message + Environment.NewLine;
-                _ = _client.SendAsync(message);
-
-            
-
+            _ = _client.SendAsync(message + "\n");
             if (_client.IsConnected == false) {
                 messageBoard.Text += "Server gone bruv" + Environment.NewLine;
             }
@@ -70,12 +71,8 @@ namespace ChatClient
         {
             Dispatcher.Dispatch(() =>
             {
-            if (messageBoard.Text.StartsWith("Command Participants"))
-            {
-                participantList.Text += message;
-            }
+                    messageBoard.Text += $"{message}"; 
             });
-
         }
 
        
@@ -90,11 +87,7 @@ namespace ChatClient
         private void OnConnect(Networking channel)
         {
             _logger.LogDebug("Client on connect called");
-
-            if (userName.Text.Length > 0)
-            {
-                channel.ID = userName.Text;
-            }
+            _client.HandleIncomingDataAsync(true);
         }
     }
 

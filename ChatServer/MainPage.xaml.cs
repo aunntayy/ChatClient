@@ -110,16 +110,15 @@ namespace ChatServer
         
         //[Obsolete]
         private  void OnMessageReceived(Networking channel, string message)
-        
         {
             // Command name [name]
             if (message.StartsWith("Command Name"))
             {
-                channel.ID = message.Substring(message.LastIndexOf("[") + 1, message.LastIndexOf("]") - message.LastIndexOf("[") - 1);
-                //channel.ID = message.Split(' ').Last();
+                //channel.ID = message.Substring(message.LastIndexOf("[") + 1, message.LastIndexOf("]") - message.LastIndexOf("[") - 1);
+                channel.ID = message.Split(' ').Last().TrimEnd('\n');
                 Dispatcher.Dispatch(() => {
-                    messageBoard.Text += $"{channel.ID} - {message}\n";
-                    participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
+                    messageBoard.Text += $"{channel.ID} - {message}";
+                    participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}\n";
                 });
                 _logger.LogDebug("Send participants list to client");
             }else if (message.StartsWith("Command Participants"))
@@ -143,7 +142,7 @@ namespace ChatServer
                 Dispatcher.Dispatch(() => {
                     foreach (var client in tempList)
                     {
-                        messageBoard.Text += $"{client.ID} - {message}\n";
+                        messageBoard.Text += $"{client.ID} - {message}";
 
                     }
                 });
@@ -171,11 +170,7 @@ namespace ChatServer
 
                     // Update messageBoard UI element after sending messages to all clients
                     Dispatcher.Dispatch(() => {
-                        foreach (var client in tempList)
-                        {
-                            messageBoard.Text += $"{client.ID} - {message}\n";
-                          
-                        }
+                            messageBoard.Text += $"{channel.ID} - {message}";
                     });
 
                 }
@@ -192,13 +187,16 @@ namespace ChatServer
             if (shutdownButton.Text == "Shutdown Server")
             {
                 _logger.LogDebug("Shut down button clicked");
+                List<Networking> copy = new List<Networking>(_clients);
                 Dispatcher.Dispatch(() =>
                 {
                 messageBoard.Text += "Server shut down" + Environment.NewLine;
                 shutdownButton.Text = "Start Server";
+                    foreach (Networking client in copy)
+                    {
+                        messageBoard.Text += client.ID + " has disconnected from server" + Environment.NewLine;
+                    }
                 });
-                // Disconnect everyone
-                List<Networking> copy = new List<Networking>(_clients);
                 foreach (Networking client in copy)
                 {
                     client.Disconnect();
