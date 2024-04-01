@@ -29,8 +29,6 @@ namespace ChatClient
             _logger = logger;
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
             InitializeComponent();
-          
-            
         }
 
 

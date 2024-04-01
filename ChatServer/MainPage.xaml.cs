@@ -78,7 +78,7 @@ namespace ChatServer
             }
             // Update message and participant list
              Dispatcher.Dispatch(() => {
-                participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
+                
                 //messageBoard.Text += channel.ID + " has connected to sever" + Environment.NewLine;
             });
             _logger.LogDebug("server OnConnection");
@@ -117,7 +117,8 @@ namespace ChatServer
                 channel.ID = message.Substring(message.LastIndexOf("[") + 1, message.LastIndexOf("]") - message.LastIndexOf("[") - 1);
                 //channel.ID = message.Split(' ').Last();
                 Dispatcher.Dispatch(() => {
-                    messageBoard.Text += $"{channel.ID} - {message}";
+                    messageBoard.Text += $"{channel.ID} - {message}\n";
+                    participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
                 });
                 _logger.LogDebug("Send participants list to client");
             }
@@ -146,8 +147,8 @@ namespace ChatServer
                     Dispatcher.Dispatch(() => {
                         foreach (var client in tempList)
                         {
-                            messageBoard.Text += client.ID + " ";
-                            messageBoard.Text += message + Environment.NewLine;
+                            messageBoard.Text += $"{client.ID} - {message}\n";
+                            //messageBoard.Text += message + Environment.NewLine;
                         }
                     });
 
@@ -176,13 +177,13 @@ namespace ChatServer
         // Shut down server
         private void Shutdown_Click(object sender, EventArgs e)
         {
-            if (shutdownButton.Text == "Shutdown Server" && _clients.Count > 0)
+            if (shutdownButton.Text == "Shutdown Server")
             {
                 _logger.LogDebug("Shut down button clicked");
-                shutdownButton.Text = "Start Server";
                 Dispatcher.Dispatch(() =>
                 {
                 messageBoard.Text += "Server shut down" + Environment.NewLine;
+                shutdownButton.Text = "Start Server";
                 });
                 // Disconnect everyone
                 List<Networking> copy = new List<Networking>(_clients);
@@ -194,8 +195,6 @@ namespace ChatServer
                 _clients.Clear();
                 // Stop waiting for the server
                 _networking.StopWaitingForClients();
-                // Clean the list
-                participantUpdate();
             }
             else
             {
@@ -205,7 +204,7 @@ namespace ChatServer
                     messageBoard.Text += "Server started" + Environment.NewLine;
                 });
                 shutdownButton.Text = "Shutdown Server";
-                _networking.WaitForClientsAsync(_port, true);
+                _ = _networking.WaitForClientsAsync(_port, true);
             }
 
         }
