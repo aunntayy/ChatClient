@@ -107,8 +107,9 @@ namespace ChatServer
             }
         }
 
-        [Obsolete]
-        private void OnMessageReceived(Networking channel, string message)
+        
+        //[Obsolete]
+        private  void OnMessageReceived(Networking channel, string message)
         
         {
             // Command name [name]
@@ -121,12 +122,37 @@ namespace ChatServer
                     participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
                 });
                 _logger.LogDebug("Send participants list to client");
+            }else if (message.StartsWith("Command Participants"))
+            {
+                StringBuilder participantList = new StringBuilder();
+                List<Networking> tempList = new List<Networking>(_clients);
+                //retrieve client
+                foreach (var client in _clients)
+                {
+                    participantList.Append("[" + client.ID + "]");
+                }
+
+                _ = channel.SendAsync(participantList.ToString());
+
+                //send message to all clients
+                foreach (var client in tempList)
+                {
+                    client.SendAsync(message);
+                }
+
+                Dispatcher.Dispatch(() => {
+                    foreach (var client in tempList)
+                    {
+                        messageBoard.Text += $"{client.ID} - {message}\n";
+
+                    }
+                });
+
+                _logger.LogDebug("Send participants list to client");
             }
             else
             {
-                //Device.BeginInvokeOnMainThread(() => {
-                //    messageBoard.Text += "sth" + ": " + message + "\r\n";
-                //});
+               
                 lock (this._clients)
                 {
                     // Critical section: Ensure exclusive access to the shared resource
@@ -140,7 +166,7 @@ namespace ChatServer
                     // Send messages to clients
                     foreach (var client in tempList)
                     {
-                        client.SendAsync(message);
+                         client.SendAsync(message);
                     }
 
                     // Update messageBoard UI element after sending messages to all clients
@@ -148,7 +174,7 @@ namespace ChatServer
                         foreach (var client in tempList)
                         {
                             messageBoard.Text += $"{client.ID} - {message}\n";
-                            //messageBoard.Text += message + Environment.NewLine;
+                          
                         }
                     });
 
@@ -156,22 +182,8 @@ namespace ChatServer
             }
             // Command Participants
             // send a list of participants back to the requesting client:
-            //if (message.StartsWith("Command Participants"))
-            //{
-            //    StringBuilder participantList = new StringBuilder();
-            //    foreach (var client in _clients)
-            //    {
-            //        participantList.Append("[" + _clients + "]");
-            //    }
-            //    //Send to each client a message
-            //    foreach (var client in _clients)
-            //    {
-            //       // channel.SendAsync(message);
-            //       // channel.SendAsync(participantList.ToString());
-            //    }
-            //    _logger.LogDebug("Send participants list to client");
-            //}
-               
+            
+
         }
 
         // Shut down server

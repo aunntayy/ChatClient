@@ -32,29 +32,34 @@ namespace ChatClient
         }
 
 
-        
+        //clicked retrieve user button
+        private void UserBttnClicked(object sender, EventArgs e)
+        {
+            _ = _client.SendAsync("Command Participants");
+        }
+      
+
         //connect button
         private void Connect(object sender, EventArgs e) {
             _logger.LogDebug("Connect button clicked");
-            //  host = hostAddress.Text;
+              host = hostAddress.Text;
             //  _client.ID = userName.Text; 
             Dispatcher.Dispatch(() => {
                 _client.ID = userName.Text;
-                _ = _client.ConnectAsync("192.168.50.201", port);
+                _ = _client.ConnectAsync(host, port);
                 _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
             
             });
         }
 
         //hit enter on message
-        private async void Message(object sender, EventArgs e) {
+        private void Message(object sender, EventArgs e) {
             _logger.LogDebug("Message entry");
             message = textEntry.Text;
             messageBoard.Text += userName.Text + ": " + message + Environment.NewLine;
-            await _client.SendAsync(message);
+                _ = _client.SendAsync(message);
 
-          
-          
+            
 
             if (_client.IsConnected == false) {
                 messageBoard.Text += "Server gone bruv" + Environment.NewLine;
@@ -63,11 +68,14 @@ namespace ChatClient
 
         private void OnMessage(Networking channel, string message)
         {
-            if (!message.StartsWith("Command Name")) {
-             
-                
+            Dispatcher.Dispatch(() =>
+            {
+            if (messageBoard.Text.StartsWith("Command Participants"))
+            {
+                participantList.Text += message;
             }
-           
+            });
+
         }
 
        

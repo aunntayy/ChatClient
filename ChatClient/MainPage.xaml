@@ -59,7 +59,7 @@
                   BackgroundColor="Beige"
                   x:Name="participantList"/>
 
-            <Button x:Name="retrieveUser"  Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300"/>
+            <Button x:Name="retrieveUser"  Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300" Clicked="UserBttnClicked"/>
 
 
         </StackLayout>
