@@ -39,10 +39,12 @@ namespace ChatClient
         private void Connect(object sender, EventArgs e) {
             _logger.LogDebug("Connect button clicked");
             //  host = hostAddress.Text;
-            //    _client.ID = userName.Text; 
+            //  _client.ID = userName.Text; 
             Dispatcher.Dispatch(() => {
                 _client.ID = userName.Text;
-                _ = _client.ConnectAsync("10.211.55.3", port);
+                _ = _client.ConnectAsync("192.168.50.201", port);
+                _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
+            
             });
         }
 
@@ -82,11 +84,10 @@ namespace ChatClient
         private void OnConnect(Networking channel)
         {
             _logger.LogDebug("Client on connect called");
-           
+
             if (userName.Text.Length > 0)
             {
-              channel.ID = userName.Text;
-              _ = _client.SendAsync("Command Name" + "[" + userName.Text + "]");
+                channel.ID = userName.Text;
             }
         }
     }

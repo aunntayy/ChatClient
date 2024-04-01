@@ -20,6 +20,7 @@ namespace ChatServer
         private TcpListener network_listener;
         public string MachineName { get; set; }
         public string IPAddress { get; set; }
+
         public MainPage(ILogger<MainPage> logger)
         {
             InitializeComponent();
@@ -70,13 +71,15 @@ namespace ChatServer
         /// <param name="channel"></param>
         private void OnConnection(Networking channel)
         {
-
-            // Add to client list
-             _clients.Add(channel);
+            lock(this._clients) 
+            {
+                // Add to client list
+                _clients.Add(channel);
+            }
             // Update message and participant list
-            Dispatcher.Dispatch(() => {
-                participantList.Text += channel.ID;
-                messageBoard.Text += channel.ID + " has connected to sever" + Environment.NewLine;
+             Dispatcher.Dispatch(() => {
+                participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
+                //messageBoard.Text += channel.ID + " has connected to sever" + Environment.NewLine;
             });
             _logger.LogDebug("server OnConnection");
         }
@@ -95,66 +98,60 @@ namespace ChatServer
                 }
                
                 // Add a noti to message
-                Device.BeginInvokeOnMainThread(() => {
-                    if (channel != null && channel.ID != null) {
-                        messageBoard.Text += channel.ID + " has disconnected from server" + Environment.NewLine;
-                    } else {
-                        messageBoard.Text += "Unknown client has disconnected from server" + Environment.NewLine;
-                    }
+                Dispatcher.Dispatch(() => {
+                    messageBoard.Text += channel.ID + " has disconnected from server" + Environment.NewLine;
                 });
                 // Update participant list
                 participantUpdate();
                 _logger.LogDebug("server OnDisconnect");
-
-                
             }
         }
+
+        [Obsolete]
         private void OnMessageReceived(Networking channel, string message)
+        
         {
             // Command name [name]
             if (message.StartsWith("Command Name"))
             {
-                // Find the index of the opening bracket '['
-                int startIndex = message.IndexOf('[');
-                if (startIndex != -1)
-                {
-                    // Find the index of the closing bracket ']' starting from the index after the opening bracket
-                    int endIndex = message.IndexOf(']', startIndex + 1);
-                    if (endIndex != -1)
-                    {
-                        // Extract the substring between the brackets
-                        string name = message.Substring(startIndex + 1, endIndex - startIndex - 1);
-                        bool nameExists = false;
-
-                        // Check if the name already exists
-                        foreach (var client in _clients)
-                        {
-                            if (client.ID == name)
-                            {
-                                nameExists = true;
-                                break;
-                            }
-                        }
-
-                        if (!nameExists)
-                        {
-                            // Assign the extracted name to the channel's ID property
-                            channel.ID = name;
-                            // Update the list
-                            participantUpdate();
-                        }
-                        else
-                        {
-                        //    channel.SendAsync("NAME REJECTED");       
-                        }
-
-                        _logger.LogDebug("Send participants list to client");
-                    }
-                }
-            }else {
-                Device.BeginInvokeOnMainThread(() => {
-                    messageBoard.Text += "sth" + ": " + message + "\r\n";
+                channel.ID = message.Substring(message.LastIndexOf("[") + 1, message.LastIndexOf("]") - message.LastIndexOf("[") - 1);
+                //channel.ID = message.Split(' ').Last();
+                Dispatcher.Dispatch(() => {
+                    messageBoard.Text += $"{channel.ID} - {message}";
                 });
+                _logger.LogDebug("Send participants list to client");
+            }
+            else
+            {
+                //Device.BeginInvokeOnMainThread(() => {
+                //    messageBoard.Text += "sth" + ": " + message + "\r\n";
+                //});
+                lock (this._clients)
+                {
+                    // Critical section: Ensure exclusive access to the shared resource
+
+                    // Create a temporary list to store clients
+                    List<Networking> tempList = new List<Networking>(_clients);
+
+                    // Construct the message
+                    //message = $"{channel.ID} - {message}";
+
+                    // Send messages to clients
+                    foreach (var client in tempList)
+                    {
+                        client.SendAsync(message);
+                    }
+
+                    // Update messageBoard UI element after sending messages to all clients
+                    Dispatcher.Dispatch(() => {
+                        foreach (var client in tempList)
+                        {
+                            messageBoard.Text += client.ID + " ";
+                            messageBoard.Text += message + Environment.NewLine;
+                        }
+                    });
+
+                }
             }
             // Command Participants
             // send a list of participants back to the requesting client:
@@ -179,13 +176,13 @@ namespace ChatServer
         // Shut down server
         private void Shutdown_Click(object sender, EventArgs e)
         {
-            if (shutdownButton.Text == "Shutdown Server")
+            if (shutdownButton.Text == "Shutdown Server" && _clients.Count > 0)
             {
                 _logger.LogDebug("Shut down button clicked");
                 shutdownButton.Text = "Start Server";
                 Dispatcher.Dispatch(() =>
                 {
-                    messageBoard.Text += "Server shut down" + Environment.NewLine;
+                messageBoard.Text += "Server shut down" + Environment.NewLine;
                 });
                 // Disconnect everyone
                 List<Networking> copy = new List<Networking>(_clients);
@@ -208,7 +205,7 @@ namespace ChatServer
                     messageBoard.Text += "Server started" + Environment.NewLine;
                 });
                 shutdownButton.Text = "Shutdown Server";
-                 _networking.WaitForClientsAsync(_port, true);
+                _networking.WaitForClientsAsync(_port, true);
             }
 
         }
@@ -225,7 +222,7 @@ namespace ChatServer
             //Update the list
             foreach (var channel in _clients)
             {
-                Device.BeginInvokeOnMainThread(() => {
+                Dispatcher.Dispatch(() => {
                     // Add the name and the IP address
                     participantList.Text += channel.ID;
                 });

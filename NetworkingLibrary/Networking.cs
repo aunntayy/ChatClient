@@ -150,7 +150,7 @@ namespace Communications
                     _tcpClient = new TcpClient();
                     await _tcpClient.ConnectAsync(host, port);
                     onConnect(this);
-
+                    ID = _tcpClient.Client.RemoteEndPoint.ToString();
                     _logger.LogDebug("Connect Async succesful");
                 }
             }
@@ -220,9 +220,9 @@ namespace Communications
                 while (IsConnected)
                 {
                     NetworkStream stream = _tcpClient.GetStream();
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[4096];
                     int bytesRead = await stream.ReadAsync(buffer);
-                    string message = Encoding.UTF8.GetString(buffer);
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     onMessage?.Invoke(this, message);
 
                     if (!infinite)
