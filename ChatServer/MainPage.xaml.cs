@@ -123,17 +123,29 @@ namespace ChatServer
                 _logger.LogDebug("Send participants list to client");
             }else if (message.StartsWith("Command Participants"))
             {
-                //StringBuilder participantList = new StringBuilder();
-                string requestList = "Command Participants";
+                StringBuilder participantList = new StringBuilder();
                 List<Networking> tempList = new List<Networking>(_clients);
                 //retrieve client
                 foreach (var client in _clients)
                 {
-                    //participantList.Append("[" + client.ID + "]");
-                    requestList += $",{client.ID}";
+                    participantList.Append(client.ID + ",");
+                }
+                participantList.ToString().TrimEnd(',');
+                _ = channel.SendAsync(participantList.ToString());
+
+                //send message to all clients
+                foreach (var client in tempList)
+                {
+                    client.SendAsync(message);
                 }
 
-                _ = channel.SendAsync(requestList);
+                Dispatcher.Dispatch(() => {
+                    foreach (var client in tempList)
+                    {
+                        messageBoard.Text += $"{client.ID} - {message}";
+
+                    }
+                });
 
                 _logger.LogDebug("Send participants list to client");
             }
@@ -224,7 +236,9 @@ namespace ChatServer
                     participantList.Text += channel.ID;
                 });
             }
+           
                 _logger.LogDebug("Participant list updated");
+            
         }
     }
 
