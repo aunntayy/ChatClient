@@ -26,7 +26,7 @@
                 <Entry x:Name="userName" Text="aun"  WidthRequest="100" HeightRequest="44" VerticalOptions="Center" />
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Button x:Name="ConnectBttn" Clicked="Connect" Text="Connect to server"></Button>
+                <Button x:Name="ConnectBttn" Clicked="Connect" Text="Connect to server" IsEnabled="true"></Button>
             </StackLayout>
 
           
@@ -46,6 +46,7 @@
                 HeightRequest="500"
                 x:Name="messageBoard"
                 IsReadOnly="True"
+                TextColor="black"
                 BackgroundColor="White"/>
         </StackLayout>
 
@@ -57,9 +58,10 @@
                   HorizontalOptions="FillAndExpand"
                   IsReadOnly="True"
                   BackgroundColor="Beige"
+                  TextColor="Black"
                   x:Name="participantList"/>
 
-            <Button x:Name="retrieveUser"  Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300"/>
+            <Button x:Name="retrieveUser"  Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300" Clicked="UserBttnClicked"/>
 
 
         </StackLayout>

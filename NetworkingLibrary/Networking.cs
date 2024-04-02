@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 
 namespace Communications
@@ -31,7 +32,9 @@ namespace Communications
             this.onConnect = onConnect;
             this.onDisconnect = onDisconnect;
             this.onMessage = onMessage;
+            _cancellationTokenSource = new();
             logger.LogTrace("Networking constructor built");
+           
         }
         /// <summary>
         ///   <para>
@@ -150,7 +153,6 @@ namespace Communications
                     _tcpClient = new TcpClient();
                     await _tcpClient.ConnectAsync(host, port);
                     onConnect(this);
-                    ID = _tcpClient.Client.RemoteEndPoint.ToString();
                     _logger.LogDebug("Connect Async succesful");
                 }
             }
@@ -175,7 +177,8 @@ namespace Communications
         /// </summary>
         public void Disconnect()
         {
-            _tcpClient?.Close();
+           _tcpClient?.Close();
+           _cancellationTokenSource.Cancel();
         }
 
         /// <summary>
@@ -215,22 +218,39 @@ namespace Communications
         {
             try
             {
-                while (IsConnected)
-                {
-                    NetworkStream stream = _tcpClient.GetStream();
-                    byte[] buffer = new byte[4096];
-                    int bytesRead = await stream.ReadAsync(buffer);
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    onMessage?.Invoke(this, message);
+                StringBuilder saveMessage = new();
+                NetworkStream stream = _tcpClient.GetStream();
+            
 
-                    if (!infinite)
-                        break;
+                if (stream == null)
+                {
+                    return;
+                }
+                using (stream)
+                {
+                    while (infinite)
+                    {
+                        byte[] buffer = new byte[4096];                  
+                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
+                        _cancellationTokenSource.Token.ThrowIfCancellationRequested();                     
+                        string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        saveMessage.Append(message);
+                        onMessage(this, message);    
+                        if (!infinite)
+                            break;
+                    }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogError("Await message canceled");
+            }
+
             catch (Exception ex)
             {
                 _logger.LogError($"Error handling incoming data: {ex.Message}");
-                onDisconnect?.Invoke(this);
+                Disconnect();
+                onDisconnect(this);
             }
         }
 
@@ -281,13 +301,14 @@ namespace Communications
                 
                 NetworkStream stream = _tcpClient.GetStream();
                 byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("/n","//n"));
-             
-                await stream.WriteAsync(buffer);
+               
+                await stream.WriteAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error sending message: {ex.Message}");
-                onDisconnect?.Invoke(this);
+                Disconnect();
+                onDisconnect(this);
             }
         }
 
@@ -335,7 +356,7 @@ namespace Communications
                 while (IsWaitingForClients)
                 {
                     Networking newClient = new Networking(_logger, onConnect, onDisconnect, onMessage);
-                    newClient._tcpClient = await listener.AcceptTcpClientAsync(_cancellationTokenSource.Token);
+                    newClient._tcpClient = await listener.AcceptTcpClientAsync();
                     newClient.onConnect(newClient);
 
                     new Thread(async () => { await newClient.HandleIncomingDataAsync(infinite); }).Start();

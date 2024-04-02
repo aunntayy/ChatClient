@@ -16,7 +16,7 @@ namespace ChatServer
         private Networking _networking;
         private List<Networking> _clients;
         private int _port = 11000;
-
+        
         private TcpListener network_listener;
         public string MachineName { get; set; }
         public string IPAddress { get; set; }
@@ -27,7 +27,7 @@ namespace ChatServer
             _clients = new List<Networking>();
             _logger = logger;
             // Initialize an instance of Networking
-            _networking = new Networking(logger, OnConnection, OnDisconnect, OnMessageReceived);
+            _networking = new Networking(logger,OnConnection,OnDisconnect,OnMessageReceived);
             _ = _networking.WaitForClientsAsync(_port, true);
             MachineName = Environment.MachineName;
             IPAddress = GetIPAddress();
@@ -71,15 +71,14 @@ namespace ChatServer
         /// <param name="channel"></param>
         private void OnConnection(Networking channel)
         {
-            lock (this._clients)
+            lock(this._clients) 
             {
                 // Add to client list
                 _clients.Add(channel);
             }
             // Update message and participant list
-            Dispatcher.Dispatch(() =>
-            {
-
+             Dispatcher.Dispatch(() => {
+                
                 //messageBoard.Text += channel.ID + " has connected to sever" + Environment.NewLine;
             });
             _logger.LogDebug("server OnConnection");
@@ -94,14 +93,12 @@ namespace ChatServer
             if (_clients is not null)
             {
                 // Remove clients from the list
-                lock (this._clients)
-                {
+                lock (this._clients) {
                     _clients.Remove(channel);
                 }
-
+               
                 // Add a noti to message
-                Dispatcher.Dispatch(() =>
-                {
+                Dispatcher.Dispatch(() => {
                     messageBoard.Text += channel.ID + " has disconnected from server" + Environment.NewLine;
                 });
                 // Update participant list
@@ -110,41 +107,51 @@ namespace ChatServer
             }
         }
 
-        private void OnMessageReceived(Networking channel, string message)
-
+        
+        //[Obsolete]
+        private  void OnMessageReceived(Networking channel, string message)
         {
             // Command name [name]
             if (message.StartsWith("Command Name"))
             {
                 //channel.ID = message.Substring(message.LastIndexOf("[") + 1, message.LastIndexOf("]") - message.LastIndexOf("[") - 1);
-                string name = message.Split(' ').Last().TrimEnd('\n');
-                // Check if the name already exists
-                bool nameExists = false;
+                channel.ID = message.Split(' ').Last().TrimEnd('\n');
+                Dispatcher.Dispatch(() => {
+                    messageBoard.Text += $"{channel.ID} - {message}";
+                    participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}\n";
+                });
+                _logger.LogDebug("Send participants list to client");
+            }else if (message.StartsWith("Command Participants"))
+            {
+                StringBuilder participantList = new StringBuilder();
+                List<Networking> tempList = new List<Networking>(_clients);
+                //retrieve client
                 foreach (var client in _clients)
                 {
-                    if (client.ID == name)
+                    participantList.Append(client.ID + ",");
+                }
+                participantList.ToString().TrimEnd(',');
+                _ = channel.SendAsync(participantList.ToString());
+
+                //send message to all clients
+                foreach (var client in tempList)
+                {
+                    client.SendAsync(message);
+                }
+
+                Dispatcher.Dispatch(() => {
+                    foreach (var client in tempList)
                     {
-                        nameExists = true;
-                        break;
+                        messageBoard.Text += $"{client.ID} - {message}";
+
                     }
-                }
-                if (!nameExists) 
-                {
-                    channel.ID = name;
-                    Dispatcher.Dispatch(() =>
-                    {
-                        messageBoard.Text += $"{channel.ID} - {message}";
-                        participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}";
-                        _logger.LogDebug(channel.ID + " commanded name");
-                    });
-                } else
-                {
-                    channel.SendAsync("NAME REJECTED");
-                    _logger.LogDebug("Name rejected");
-                }
+                });
+
+                _logger.LogDebug("Send participants list to client");
             }
             else
             {
+               
                 lock (this._clients)
                 {
                     // Critical section: Ensure exclusive access to the shared resource
@@ -158,37 +165,19 @@ namespace ChatServer
                     // Send messages to clients
                     foreach (var client in tempList)
                     {
-                        client.SendAsync(message);
+                         client.SendAsync(message);
                     }
 
                     // Update messageBoard UI element after sending messages to all clients
-                    Dispatcher.Dispatch(() =>
-                    {
-                        foreach (var client in tempList)
-                        {
-                            messageBoard.Text += $"{client.ID} - {message}";
-                            //messageBoard.Text += message + Environment.NewLine;
-                        }
+                    Dispatcher.Dispatch(() => {
+                            messageBoard.Text += $"{channel.ID} - {message}";
                     });
+
                 }
             }
             // Command Participants
             // send a list of participants back to the requesting client:
-            //if (message.StartsWith("Command Participants"))
-            //{
-            //    StringBuilder participantList = new StringBuilder();
-            //    foreach (var client in _clients)
-            //    {
-            //        participantList.Append("[" + _clients + "]");
-            //    }
-            //    //Send to each client a message
-            //    foreach (var client in _clients)
-            //    {
-            //       // channel.SendAsync(message);
-            //       // channel.SendAsync(participantList.ToString());
-            //    }
-            //    _logger.LogDebug("Send participants list to client");
-            //}
+            
 
         }
 
@@ -198,22 +187,22 @@ namespace ChatServer
             if (shutdownButton.Text == "Shutdown Server")
             {
                 _logger.LogDebug("Shut down button clicked");
+                List<Networking> copy = new List<Networking>(_clients);
                 Dispatcher.Dispatch(() =>
                 {
-                    messageBoard.Text += "Server shut down" + Environment.NewLine;
-                    shutdownButton.Text = "Start Server";
-                });
-                if (_clients.Count > 0)
-                {
-                    // Disconnect everyone
-                    List<Networking> copy = new List<Networking>(_clients);
+                messageBoard.Text += "Server shut down" + Environment.NewLine;
+                shutdownButton.Text = "Start Server";
                     foreach (Networking client in copy)
                     {
-                       client.Disconnect();
+                        messageBoard.Text += client.ID + " has disconnected from server" + Environment.NewLine;
                     }
-                    // Clear the list 
-                    _clients.Clear();  
+                });
+                foreach (Networking client in copy)
+                {
+                    client.Disconnect();
                 }
+                // Clear the list 
+                _clients.Clear();
                 // Stop waiting for the server
                 _networking.StopWaitingForClients();
             }
@@ -227,30 +216,29 @@ namespace ChatServer
                 shutdownButton.Text = "Shutdown Server";
                 _ = _networking.WaitForClientsAsync(_port, true);
             }
+
         }
 
         // Helper method to update participant list
-
+        
         private void participantUpdate()
         {
-
             // Clear the list
+            Dispatcher.Dispatch(() =>
             {
-                Dispatcher.Dispatch(() =>
-                {
-                    participantList.Text = "";
+                participantList.Text = "";
+            });
+            //Update the list
+            foreach (var channel in _clients)
+            {
+                Dispatcher.Dispatch(() => {
+                    // Add the name and the IP address
+                    participantList.Text += channel.ID;
                 });
-                //Update the list
-                foreach (var channel in _clients)
-                {
-                    Dispatcher.Dispatch(() =>
-                    {
-                        participantList.Text = "";
-                        participantList.Text += channel.ID;
-                    });
-                }
             }
-            _logger.LogDebug("Participant list updated");
+           
+                _logger.LogDebug("Participant list updated");
+            
         }
     }
 
