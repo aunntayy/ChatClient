@@ -16,7 +16,7 @@ namespace ChatServer
         private Networking _networking;
         private List<Networking> _clients;
         private int _port = 11000;
-        
+
         private TcpListener network_listener;
         public string MachineName { get; set; }
         public string IPAddress { get; set; }
@@ -73,14 +73,8 @@ namespace ChatServer
         {
             lock(this._clients) 
             {
-                // Add to client list
-                _clients.Add(channel);
-            }
-            // Update message and participant list
-             Dispatcher.Dispatch(() => {
-                
-                //messageBoard.Text += channel.ID + " has connected to sever" + Environment.NewLine;
-            });
+                 _clients.Add(channel);
+            }            
             _logger.LogDebug("server OnConnection");
         }
 
@@ -111,17 +105,37 @@ namespace ChatServer
         //[Obsolete]
         private  void OnMessageReceived(Networking channel, string message)
         {
+           
             // Command name [name]
             if (message.StartsWith("Command Name"))
             {
-                //channel.ID = message.Substring(message.LastIndexOf("[") + 1, message.LastIndexOf("]") - message.LastIndexOf("[") - 1);
-                channel.ID = message.Split(' ').Last().TrimEnd('\n');
-                Dispatcher.Dispatch(() => {
-                    messageBoard.Text += $"{channel.ID} - {message}";
-                    participantList.Text = $"{channel.ID} : {channel.RemoteAddressPort}\n";
-                });
+              
+                string[] parts = message.Split(new[] { "Command Name" }, StringSplitOptions.None);
+                if (parts.Length == 2)
+                {
+                    string name = parts[1].Trim();
+                    foreach (var client in _clients)
+                    {
+                        if (name.Equals(client.ID))
+                        {
+                            _ = channel.SendAsync("NAME REJECTED" + Environment.NewLine);
+                            break;
+                        }
+
+                    }
+                    channel.ID = name;
+                    Dispatcher.Dispatch(() => {
+                        //use remote address port to change name to what ever the name is
+                        messageBoard.Text += $"{channel.ID} - {message}";
+                        participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}\n";
+                    });
+                }
+                
                 _logger.LogDebug("Send participants list to client");
-            }else if (message.StartsWith("Command Participants"))
+                
+                
+            }
+            else if (message.StartsWith("Command Participants"))
             {
                 string requestList = "Command Participants";
                 List<Networking> tempList = new List<Networking>(_clients);
@@ -138,15 +152,9 @@ namespace ChatServer
             {
                
                 lock (this._clients)
-                {
-                    // Critical section: Ensure exclusive access to the shared resource
-
+                {                  
                     // Create a temporary list to store clients
                     List<Networking> tempList = new List<Networking>(_clients);
-
-                    // Construct the message
-                    //message = $"{channel.ID} - {message}";
-
                     // Send messages to clients
                     foreach (var client in tempList)
                     {

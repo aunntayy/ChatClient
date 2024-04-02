@@ -20,12 +20,13 @@ namespace ChatClient
 
         private readonly Networking _client;
         private readonly ILogger _logger;
-  
+
         private const int port = 11000;
         private string host { get; set; }
-        private string message {  get; set; }   
-        public MainPage(ILogger<MainPage> logger){
-            
+        private string message { get; set; }
+        public MainPage(ILogger<MainPage> logger)
+        {
+
             _logger = logger;
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
             InitializeComponent();
@@ -37,15 +38,17 @@ namespace ChatClient
         {
             _ = _client.SendAsync("Command Participants");
         }
-      
+
 
         //connect button
-        private void Connect(object sender, EventArgs e) {
+        private void Connect(object sender, EventArgs e)
+        {
             _logger.LogDebug("Connect button clicked");
             host = hostAddress.Text;
+
             _client.ID = userName.Text;
             _ = _client.ConnectAsync(host, port);
-            _ = _client.SendAsync("Command Name "  + userName.Text + "\n");
+            _ = _client.SendAsync("Command Name " + userName.Text + "\n");
             if (_client.IsConnected)
             {
                 // Update the button text to "Connected"
@@ -53,16 +56,19 @@ namespace ChatClient
                 {
                     ConnectBttn.Text = "Connected";
                     ConnectBttn.IsEnabled = false;
+                    messageBoard.Text += "Connected to server:)" + Environment.NewLine;
                 });
             }
         }
 
         //hit enter on message
-        private void Message(object sender, EventArgs e) {
+        private void Message(object sender, EventArgs e)
+        {
             _logger.LogDebug("Message entry");
             message = textEntry.Text;
             _ = _client.SendAsync(message + "\n");
-            if (_client.IsConnected == false) {
+            if (_client.IsConnected == false)
+            {
                 messageBoard.Text += "Server gone bruv" + Environment.NewLine;
             }
         }
@@ -81,19 +87,19 @@ namespace ChatClient
                         participantList.Text += userID + Environment.NewLine;
                     }
                 }
-                else { messageBoard.Text += $"{message}"; }
-               
-               
+                else { messageBoard.Text += $"{channel.ID} - {message}"; }
+
+
             });
         }
 
-       
+
 
         private void OnDisconnect(Networking channel)
         {
-          _logger.LogDebug($"Disconnecting {channel}");
-           ConnectBttn.IsEnabled = false;
-            
+            _logger.LogDebug($"Disconnecting {channel}");
+            ConnectBttn.IsEnabled = false;
+
         }
 
         private void OnConnect(Networking channel)
