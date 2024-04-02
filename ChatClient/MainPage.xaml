@@ -58,6 +58,7 @@
                   HorizontalOptions="FillAndExpand"
                   IsReadOnly="True"
                   BackgroundColor="Beige"
+                  TextColor="Black"
                   x:Name="participantList"/>
 
             <Button x:Name="retrieveUser"  Text="Retrieve Participants" FontSize="20" HeightRequest="30" WidthRequest="300" Clicked="UserBttnClicked"/>

@@ -71,7 +71,17 @@ namespace ChatClient
         {
             Dispatcher.Dispatch(() =>
             {
-                    messageBoard.Text += $"{message}"; 
+                if (message.StartsWith("Command Participants")) 
+                {
+                    participantList.Text = "";
+                    string[] list = message.Split(',');
+                    list[0] = "Current user";
+                    foreach (string userID in list) {
+                        participantList.Text += userID + Environment.NewLine;
+                    }
+                }
+                else { messageBoard.Text += $"{message}"; }
+                     
             });
         }
 
@@ -87,7 +97,7 @@ namespace ChatClient
         private void OnConnect(Networking channel)
         {
             _logger.LogDebug("Client on connect called");
-            _client.HandleIncomingDataAsync(true);
+            _ = _client.HandleIncomingDataAsync(true);
         }
     }
 
