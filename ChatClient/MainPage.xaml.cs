@@ -71,8 +71,19 @@ namespace ChatClient
         {
             Dispatcher.Dispatch(() =>
             {
-                _ = _client.HandleIncomingDataAsync(true);
-                messageBoard.Text += $"{message}"; 
+                if (message.StartsWith("Command Participants"))
+                {
+                    participantList.Text = "";
+                    string[] list = message.Split(',');
+                    list[0] = "Current user";
+                    foreach (string userID in list)
+                    {
+                        participantList.Text += userID + Environment.NewLine;
+                    }
+                }
+                else { messageBoard.Text += $"{message}"; }
+               
+               
             });
         }
 

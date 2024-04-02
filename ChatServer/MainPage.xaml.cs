@@ -118,35 +118,20 @@ namespace ChatServer
                 channel.ID = message.Split(' ').Last().TrimEnd('\n');
                 Dispatcher.Dispatch(() => {
                     messageBoard.Text += $"{channel.ID} - {message}";
-                    participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}\n";
+                    participantList.Text = $"{channel.ID} : {channel.RemoteAddressPort}\n";
                 });
                 _logger.LogDebug("Send participants list to client");
             }else if (message.StartsWith("Command Participants"))
             {
-                StringBuilder participantList = new StringBuilder();
+                string requestList = "Command Participants";
                 List<Networking> tempList = new List<Networking>(_clients);
                 //retrieve client
                 foreach (var client in _clients)
                 {
-                    participantList.Append(client.ID + ",");
-                }
-                participantList.ToString().TrimEnd(',');
-                _ = channel.SendAsync(participantList.ToString());
-
-                //send message to all clients
-                foreach (var client in tempList)
-                {
-                    client.SendAsync(message);
+                    requestList += $",{client.ID}";
                 }
 
-                Dispatcher.Dispatch(() => {
-                    foreach (var client in tempList)
-                    {
-                        messageBoard.Text += $"{client.ID} - {message}";
-
-                    }
-                });
-
+                _ = channel.SendAsync(requestList);        
                 _logger.LogDebug("Send participants list to client");
             }
             else
