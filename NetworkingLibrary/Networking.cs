@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 
 namespace Communications
@@ -31,7 +32,9 @@ namespace Communications
             this.onConnect = onConnect;
             this.onDisconnect = onDisconnect;
             this.onMessage = onMessage;
+            _cancellationTokenSource = new();
             logger.LogTrace("Networking constructor built");
+           
         }
         /// <summary>
         ///   <para>
@@ -150,7 +153,6 @@ namespace Communications
                     _tcpClient = new TcpClient();
                     await _tcpClient.ConnectAsync(host, port);
                     onConnect(this);
-
                     _logger.LogDebug("Connect Async succesful");
                 }
             }
@@ -175,9 +177,8 @@ namespace Communications
         /// </summary>
         public void Disconnect()
         {
-            _tcpClient?.Close();
-            // call the delegate to show the right noti
-            onDisconnect?.Invoke(this);
+           _tcpClient?.Close();
+           _cancellationTokenSource.Cancel();
         }
 
         /// <summary>
@@ -217,22 +218,39 @@ namespace Communications
         {
             try
             {
-                while (IsConnected)
-                {
-                    NetworkStream stream = _tcpClient.GetStream();
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = await stream.ReadAsync(buffer);
-                    string message = Encoding.UTF8.GetString(buffer);
-                    onMessage?.Invoke(this, message);
+                StringBuilder saveMessage = new();
+                NetworkStream stream = _tcpClient.GetStream();
+            
 
-                    if (!infinite)
-                        break;
+                if (stream == null)
+                {
+                    return;
+                }
+                using (stream)
+                {
+                    while (infinite)
+                    {
+                        byte[] buffer = new byte[4096];                  
+                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
+                        _cancellationTokenSource.Token.ThrowIfCancellationRequested();                     
+                        string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        saveMessage.Append(message);
+                        onMessage(this, message);    
+                        if (!infinite)
+                            break;
+                    }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogError("Await message canceled");
+            }
+
             catch (Exception ex)
             {
                 _logger.LogError($"Error handling incoming data: {ex.Message}");
-                onDisconnect?.Invoke(this);
+                Disconnect();
+                onDisconnect(this);
             }
         }
 
@@ -283,13 +301,14 @@ namespace Communications
                 
                 NetworkStream stream = _tcpClient.GetStream();
                 byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("/n","//n"));
-             
-                await stream.WriteAsync(buffer);
+               
+                await stream.WriteAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error sending message: {ex.Message}");
-                onDisconnect?.Invoke(this);
+                Disconnect();
+                onDisconnect(this);
             }
         }
 
