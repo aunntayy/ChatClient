@@ -20,13 +20,15 @@ namespace ChatClient
 
         private readonly Networking _client;
         private readonly ILogger _logger;
-
+        public string MachineName { get; set; }
+    
         private const int port = 11000;
-        private string host { get; set; }
-        private string message { get; set; }
+        private string? Host { get; set; }
+        private string? message { get; set; }
         public MainPage(ILogger<MainPage> logger)
         {
-
+            MachineName = Environment.MachineName;
+            this.BindingContext = this;
             _logger = logger;
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
             InitializeComponent();
@@ -44,10 +46,10 @@ namespace ChatClient
         private void Connect(object sender, EventArgs e)
         {
             _logger.LogDebug("Connect button clicked");
-            host = hostAddress.Text;
+            Host = hostAddress.Text;
 
             _client.ID = userName.Text;
-            _ = _client.ConnectAsync(host, port);
+            _ = _client.ConnectAsync(Host, port);
             _ = _client.SendAsync("Command Name " + userName.Text + "\n");
             if (_client.IsConnected)
             {

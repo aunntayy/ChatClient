@@ -26,8 +26,8 @@
         <StackLayout Grid.Row="0" Grid.Column="0">
             <Label Text="Server Information" FontSize="20" HorizontalOptions="Start" Margin="0,0,0,10"/>
               <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
-                <Label Text="Server Name/Address:" VerticalOptions="Center"/>
-                <Entry TextColor="Black" BackgroundColor="Orange"  x:Name ="hostAddress" Text="localhost" WidthRequest="200" HeightRequest="44" VerticalOptions="Center"/>
+                <Label Text="Server Name-IP Address:" VerticalOptions="Center"/>
+                <Entry TextColor="Black" BackgroundColor="Orange"  x:Name ="hostAddress" Text="{Binding MachineName}" WidthRequest="200" HeightRequest="44" VerticalOptions="Center"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" HorizontalOptions="Start">
                 <Label Text="Your Name" VerticalOptions="Center"/>

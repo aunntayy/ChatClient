@@ -13,11 +13,11 @@ namespace ChatServer
     public partial class MainPage : ContentPage
     {
         private readonly ILogger _logger;
-        private Networking _networking;
-        private List<Networking> _clients;
-        private int _port = 11000;
+        private readonly Networking _networking;
+        private readonly List<Networking> _clients;
+        private readonly int _port = 11000;
 
-        private TcpListener network_listener;
+      
         public string MachineName { get; set; }
         public string IPAddress { get; set; }
 
