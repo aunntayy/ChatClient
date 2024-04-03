@@ -36,7 +36,7 @@ namespace ChatServer
     {
         private readonly ILogger _logger;
         private readonly Networking _networking;
-        private readonly List<Networking> _clients;
+        private List<Networking> _clients;
         private readonly int _port = 11000;
 
         /// <summary>
@@ -139,11 +139,42 @@ namespace ChatServer
         {
             if (message.StartsWith("Command Name"))
             {
-                // Handle command for changing client name
+                string[] parts = message.Split(new[] { "Command Name" }, StringSplitOptions.None);
+                if (parts.Length == 2)
+                {
+                    string name = parts[1].Trim();
+                    foreach (var client in _clients)
+                    {
+                        if (name.Equals(client.ID))
+                        {
+                            _ = channel.SendAsync("NAME REJECTED" + Environment.NewLine);
+                            _logger.LogInformation($"{name} - rejected");
+                            break;
+                        }
+                    }
+                    channel.ID = name;
+                    Dispatcher.Dispatch(() => {
+                        //use remote address port to change name to what ever the name is
+                        messageBoard.Text += $"{channel.ID} - {message}";
+                        participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}\n";
+                        _logger.LogInformation("Command name: " + $"{channel.ID} - {message}");
+                        _logger.LogInformation("Participant List: " + $"{channel.ID} : {channel.RemoteAddressPort}\n");
+                    });
+                }
             }
             else if (message.StartsWith("Command Participants"))
             {
-                // Handle command for requesting participant list
+                string requestList = "Command Participants";
+                List<Networking> tempList = new List<Networking>(_clients);
+                //retrieve client
+                foreach (var client in _clients)
+                {
+                    requestList += $",{client.ID}";
+                }
+
+                _ = channel.SendAsync(requestList);
+                _logger.LogDebug("Send participants list to client");
+                _logger.LogInformation($"{channel.ID}" + " requested current participant list");
             }
             else
             {

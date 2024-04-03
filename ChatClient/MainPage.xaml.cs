@@ -33,8 +33,8 @@ namespace ChatClient
         private readonly Networking _client;
         private readonly ILogger _logger;
         private const int port = 11000;
-        private string? Host { get; set; }
-        private string? message { get; set; }
+        private string host { get; set; }
+        private string message { get; set; }
         public string MachineName { get; set; }
 
         /// <summary>
@@ -43,8 +43,7 @@ namespace ChatClient
         /// <param name="logger">The logger instance for logging messages.</param>
         public MainPage(ILogger<MainPage> logger)
         {
-            MachineName = Environment.MachineName;
-            this.BindingContext = this;
+          
             _logger = logger;
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
             InitializeComponent();
@@ -68,10 +67,10 @@ namespace ChatClient
         private void Connect(object sender, EventArgs e)
         {
             _logger.LogDebug("Connect button clicked");
-            Host = hostAddress.Text;
+            host = hostAddress.Text;
 
             _client.ID = userName.Text;
-            _ = _client.ConnectAsync(Host, port);
+            _ = _client.ConnectAsync(host, port);
             _ = _client.SendAsync("Command Name " + userName.Text + "\n");
             if (_client.IsConnected)
             {

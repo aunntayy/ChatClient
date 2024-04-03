@@ -236,8 +236,7 @@ namespace Communications
             try
             {
                 StringBuilder saveMessage = new();
-                NetworkStream stream = _tcpClient.GetStream();
-            
+                NetworkStream stream = _tcpClient.GetStream();           
 
                 if (stream == null)
                 {

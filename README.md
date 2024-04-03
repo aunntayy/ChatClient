@@ -29,7 +29,7 @@ Copyright:  CS 3500 and Phuc Hoang and Chanphone Visathip - This work may not be
 	Debug hour: 15  We was struggling on trying to get ChatClient recieve message from ChatServer. Most of debug hour was on that and the rest
 	are for small debugging.
 # Testing
-	Tests were helped by ChatGPT
+	For testing, we only write basic functions tests for networking class. Most of the tests were experiments running Clients and Servers together to see how they behave and correct them.
 
 # Good software practice (GSP)	
 	1.Well-named, commented and short methods : 
