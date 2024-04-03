@@ -179,6 +179,7 @@ namespace Communications
         {
            _tcpClient?.Close();
            _cancellationTokenSource.Cancel();
+           _logger.LogDebug("Disconnect");
         }
 
         /// <summary>
@@ -385,6 +386,7 @@ namespace Communications
         {
             IsWaitingForClients = false;
             _cancellationTokenSource?.Cancel();
+            _logger.LogDebug("Stop waiting for clients");
         }
     }
 }

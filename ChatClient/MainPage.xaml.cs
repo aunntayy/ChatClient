@@ -86,10 +86,10 @@ namespace ChatClient
                     {
                         participantList.Text += userID + Environment.NewLine;
                     }
+                    _logger.LogDebug("Participant list receive");
                 }
                 else { messageBoard.Text += $"{channel.ID} - {message}"; }
-
-
+                _logger.LogDebug("Message receive");
             });
         }
 
@@ -99,7 +99,6 @@ namespace ChatClient
         {
             _logger.LogDebug($"Disconnecting {channel}");
             ConnectBttn.IsEnabled = false;
-
         }
 
         private void OnConnect(Networking channel)
@@ -108,5 +107,4 @@ namespace ChatClient
             _ = _client.HandleIncomingDataAsync(true);
         }
     }
-
 }

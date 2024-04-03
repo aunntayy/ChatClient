@@ -60,6 +60,7 @@ namespace ChatServer
                 Console.WriteLine($"Error getting IP address: {ex.Message}");
                 ipAddress = "Error getting IP address.";
             }
+            _logger.LogDebug("IP address gotted");
             return ipAddress;
         }
         // Event handlers for networking events
@@ -94,6 +95,7 @@ namespace ChatServer
                 // Add a noti to message
                 Dispatcher.Dispatch(() => {
                     messageBoard.Text += channel.ID + " has disconnected from server" + Environment.NewLine;
+                    _logger.LogInformation($"Disconnecting {channel.ID}");
                 });
                 // Update participant list
                 participantUpdate();
@@ -102,14 +104,11 @@ namespace ChatServer
         }
 
         
-        //[Obsolete]
         private  void OnMessageReceived(Networking channel, string message)
         {
-           
             // Command name [name]
             if (message.StartsWith("Command Name"))
             {
-              
                 string[] parts = message.Split(new[] { "Command Name" }, StringSplitOptions.None);
                 if (parts.Length == 2)
                 {
@@ -119,21 +118,19 @@ namespace ChatServer
                         if (name.Equals(client.ID))
                         {
                             _ = channel.SendAsync("NAME REJECTED" + Environment.NewLine);
+                            _logger.LogInformation($"{name} - rejected");
                             break;
                         }
-
                     }
                     channel.ID = name;
                     Dispatcher.Dispatch(() => {
                         //use remote address port to change name to what ever the name is
                         messageBoard.Text += $"{channel.ID} - {message}";
                         participantList.Text += $"{channel.ID} : {channel.RemoteAddressPort}\n";
+                        _logger.LogInformation("Command name: "+$"{channel.ID} - {message}");
+                        _logger.LogInformation("Participant List: "+$"{channel.ID} : {channel.RemoteAddressPort}\n");
                     });
                 }
-                
-                _logger.LogDebug("Send participants list to client");
-                
-                
             }
             else if (message.StartsWith("Command Participants"))
             {
@@ -147,10 +144,10 @@ namespace ChatServer
 
                 _ = channel.SendAsync(requestList);        
                 _logger.LogDebug("Send participants list to client");
+                _logger.LogInformation($"{channel.ID}" + " requested current participant list");
             }
             else
             {
-               
                 lock (this._clients)
                 {                  
                     // Create a temporary list to store clients
@@ -158,14 +155,15 @@ namespace ChatServer
                     // Send messages to clients
                     foreach (var client in tempList)
                     {
-                         client.SendAsync(message);
+                         _ = client.SendAsync(message);
+                         _logger.LogInformation("Message sent: " + $"{channel.ID}-{message}");
                     }
 
                     // Update messageBoard UI element after sending messages to all clients
                     Dispatcher.Dispatch(() => {
-                            messageBoard.Text += $"{channel.ID} - {message}";
+                        messageBoard.Text += $"{channel.ID} - {message}";
+                        _logger.LogInformation("Message update on server: " + $"{channel.ID} - {message}");
                     });
-
                 }
             }
             // Command Participants
@@ -179,7 +177,7 @@ namespace ChatServer
         {
             if (shutdownButton.Text == "Shutdown Server")
             {
-                _logger.LogDebug("Shut down button clicked");
+                _logger.LogInformation("Shut down button clicked");
                 List<Networking> copy = new List<Networking>(_clients);
                 Dispatcher.Dispatch(() =>
                 {
@@ -201,7 +199,7 @@ namespace ChatServer
             }
             else
             {
-                _logger.LogDebug("Start server button clicked");
+                _logger.LogInformation("Start server button clicked");
                 Dispatcher.Dispatch(() =>
                 {
                     messageBoard.Text += "Server started" + Environment.NewLine;
@@ -213,7 +211,6 @@ namespace ChatServer
         }
 
         // Helper method to update participant list
-        
         private void participantUpdate()
         {
             // Clear the list
@@ -229,9 +226,7 @@ namespace ChatServer
                     participantList.Text += channel.ID;
                 });
             }
-           
-                _logger.LogDebug("Participant list updated");
-            
+            _logger.LogInformation("Participant list updated");
         }
     }
 
