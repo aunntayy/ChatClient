@@ -357,7 +357,7 @@ namespace Communications
                 while (IsWaitingForClients)
                 {
                     Networking newClient = new Networking(_logger, onConnect, onDisconnect, onMessage);
-                    newClient._tcpClient = await listener.AcceptTcpClientAsync();
+                    newClient._tcpClient = await listener.AcceptTcpClientAsync(_cancellationTokenSource.Token);
                     newClient.onConnect(newClient);
 
                     new Thread(async () => { await newClient.HandleIncomingDataAsync(infinite); }).Start();

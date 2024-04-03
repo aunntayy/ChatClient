@@ -88,7 +88,7 @@ namespace ChatClient
                     }
                     _logger.LogDebug("Participant list receive");
                 }
-                else { messageBoard.Text += $"{channel.ID} - {message}"; }
+                else { messageBoard.Text += $"{message}"; }
                 _logger.LogDebug("Message receive");
             });
         }

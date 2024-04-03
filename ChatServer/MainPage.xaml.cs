@@ -155,8 +155,8 @@ namespace ChatServer
                     // Send messages to clients
                     foreach (var client in tempList)
                     {
-                         _ = client.SendAsync(message);
-                         _logger.LogInformation("Message sent: " + $"{channel.ID}-{message}");
+                         _ = client.SendAsync($"{channel.ID} - {message}");
+                         _logger.LogInformation("Message sent: " + $"{channel.ID} - {message}");
                     }
 
                     // Update messageBoard UI element after sending messages to all clients
@@ -168,8 +168,6 @@ namespace ChatServer
             }
             // Command Participants
             // send a list of participants back to the requesting client:
-            
-
         }
 
         // Shut down server
@@ -179,15 +177,17 @@ namespace ChatServer
             {
                 _logger.LogInformation("Shut down button clicked");
                 List<Networking> copy = new List<Networking>(_clients);
-                Dispatcher.Dispatch(() =>
-                {
+               
                 messageBoard.Text += "Server shut down" + Environment.NewLine;
                 shutdownButton.Text = "Start Server";
                     foreach (Networking client in copy)
                     {
+                    Dispatcher.Dispatch(() =>
+                    {
                         messageBoard.Text += client.ID + " has disconnected from server" + Environment.NewLine;
-                    }
-                });
+                    });
+                }
+               
                 foreach (Networking client in copy)
                 {
                     client.Disconnect();
