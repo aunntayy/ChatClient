@@ -1,30 +1,46 @@
-
 using Communications;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
+using System;
 using System.Net;
-using System.Reflection.PortableExecutable;
-using System.Threading.Channels;
 
+/// <summary>
+/// Author:    Phuc Hoang
+/// Partner:   Chanphone Visathip
+/// Date:      23-Mar-2024
+/// Course:    CS 3500, University of Utah, School of Computing
+/// Copyright: CS 3500 and Phuc Hoang - This work may not 
+///            be copied for use in Academic Coursework.
+///
+/// I, Phuc Hoang, certify that I wrote this code from scratch and
+/// did not copy it in part or whole from another source.  All 
+/// references used in the completion of the assignments are cited 
+/// in my README file.
+///
+/// File Contents
+/// This file contains the implementation of the main page for the chat client application.
+/// It includes event handlers for user interactions such as connecting to the server, sending messages, 
+/// and retrieving user information. It also handles events related to server communication such as 
+/// message reception, disconnection, and successful connection.    
+/// </summary>
 namespace ChatClient
 {
+    /// <summary>
+    /// Represents the main page of the chat client application.
+    /// </summary>
     public partial class MainPage : ContentPage
     {
-
-        //Type in the name of the remote machine you wish to talk to(default to localhost)
-        //Type in the name of the chatter(e.g. "Jim")
-        //Type in a message(and have it sent to the server)
-        //Have a way to show who is currently on the server(participants)
-        //Have a list of the conversation.
-
         private readonly Networking _client;
         private readonly ILogger _logger;
-        public string MachineName { get; set; }
-    
         private const int port = 11000;
         private string? Host { get; set; }
         private string? message { get; set; }
+        public string MachineName { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainPage"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance for logging messages.</param>
         public MainPage(ILogger<MainPage> logger)
         {
             MachineName = Environment.MachineName;
@@ -34,15 +50,21 @@ namespace ChatClient
             InitializeComponent();
         }
 
-
-        //clicked retrieve user button
+        /// <summary>
+        /// Event handler for the "Retrieve User" button click.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">The event arguments.</param>
         private void UserBttnClicked(object sender, EventArgs e)
         {
             _ = _client.SendAsync("Command Participants");
         }
 
-
-        //connect button
+        /// <summary>
+        /// Event handler for the "Connect" button click.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">The event arguments.</param>
         private void Connect(object sender, EventArgs e)
         {
             _logger.LogDebug("Connect button clicked");
@@ -63,7 +85,11 @@ namespace ChatClient
             }
         }
 
-        //hit enter on message
+        /// <summary>
+        /// Event handler for hitting enter on the message entry.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">The event arguments.</param>
         private void Message(object sender, EventArgs e)
         {
             _logger.LogDebug("Message entry");
@@ -75,6 +101,11 @@ namespace ChatClient
             }
         }
 
+        /// <summary>
+        /// Event handler for receiving messages from the server.
+        /// </summary>
+        /// <param name="channel">The networking channel.</param>
+        /// <param name="message">The received message.</param>
         private void OnMessage(Networking channel, string message)
         {
             Dispatcher.Dispatch(() =>
@@ -88,21 +119,27 @@ namespace ChatClient
                     {
                         participantList.Text += userID + Environment.NewLine;
                     }
-                    _logger.LogDebug("Participant list receive");
+                    _logger.LogDebug("Participant list received");
                 }
                 else { messageBoard.Text += $"{message}"; }
-                _logger.LogDebug("Message receive");
+                _logger.LogDebug("Message received");
             });
         }
 
-
-
+        /// <summary>
+        /// Event handler for handling disconnection from the server.
+        /// </summary>
+        /// <param name="channel">The networking channel.</param>
         private void OnDisconnect(Networking channel)
         {
             _logger.LogDebug($"Disconnecting {channel}");
             ConnectBttn.IsEnabled = false;
         }
 
+        /// <summary>
+        /// Event handler for successful connection to the server.
+        /// </summary>
+        /// <param name="channel">The networking channel.</param>
         private void OnConnect(Networking channel)
         {
             _logger.LogDebug("Client on connect called");
