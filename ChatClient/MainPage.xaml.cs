@@ -66,8 +66,15 @@ namespace ChatClient
         /// </summary>
         /// <param name="sender">The object that raised the event.</param>
         /// <param name="e">The event arguments.</param>
-        private void Connect(object sender, EventArgs e)
+        private async void Connect(object sender, EventArgs e)
         {
+            // Check if the username is empty
+            if (string.IsNullOrWhiteSpace(userName.Text))
+            {
+                await DisplayAlert("Warning", "Please enter a username.", "OK");
+                return;
+            }
+
             _logger.LogDebug("Connect button clicked");
             host = hostAddress.Text;
 
@@ -85,6 +92,7 @@ namespace ChatClient
                 });
             }
         }
+
 
         /// <summary>
         /// Event handler for hitting enter on the message entry.
