@@ -124,7 +124,6 @@ namespace ChatServer
                     messageBoard.Text += $"{channel.ID} has disconnected from the server" + Environment.NewLine;
                     _logger.LogInformation($"Disconnecting {channel.ID}");
                 });
-
                 participantUpdate();
                 _logger.LogDebug("Server OnDisconnect");
             }
@@ -206,18 +205,10 @@ namespace ChatServer
             if (shutdownButton.Text == "Shutdown Server")
             {
                 _logger.LogInformation("Shutdown button clicked");
-                List<Networking> copy = new List<Networking>(_clients);
-
                 messageBoard.Text += "Server shut down" + Environment.NewLine;
                 shutdownButton.Text = "Start Server";
-                foreach (Networking client in copy)
-                {
-                    Dispatcher.Dispatch(() =>
-                    {
-                        messageBoard.Text += $"{client.ID} has disconnected from the server" + Environment.NewLine;
-                    });
-                }
 
+                List<Networking> copy = new List<Networking>(_clients);
                 foreach (Networking client in copy)
                 {
                     client.Disconnect();

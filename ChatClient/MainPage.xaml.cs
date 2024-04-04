@@ -46,6 +46,8 @@ namespace ChatClient
           
             _logger = logger;
             _client = new Networking(logger, OnConnect, OnDisconnect, OnMessage);
+            MachineName = Environment.MachineName;
+            this.BindingContext = this;
             InitializeComponent();
         }
 
