@@ -35,7 +35,7 @@
                     x:Name="participantList"
                     IsReadOnly="True"
                     BackgroundColor="White"
-                    TextColor="Black"/>
+                    TextColor="LightBlue"/>
         </StackLayout>
 
         <!-- Messages List -->
