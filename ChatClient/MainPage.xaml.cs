@@ -103,9 +103,10 @@ namespace ChatClient
         {
             _logger.LogDebug("Message entry");
             message = textEntry.Text;
-            _ = _client.SendAsync(message + "\n");
-            if (_client.IsConnected == false)
-            {
+             _ = _client.SendAsync(message + "\n");
+            if (_client.IsConnected == false) {
+                ConnectBttn.Text = "Connect to server";
+                ConnectBttn.IsEnabled = true;
                 messageBoard.Text += "Server gone bruv" + Environment.NewLine;
             }
         }

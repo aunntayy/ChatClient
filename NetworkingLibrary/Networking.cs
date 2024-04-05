@@ -250,6 +250,7 @@ namespace Communications
                         int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
                         _cancellationTokenSource.Token.ThrowIfCancellationRequested();                     
                         string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        message.Replace("\n", "\\n");
                         saveMessage.Append(message);
                         onMessage(this, message);    
                         if (!infinite)
@@ -316,7 +317,7 @@ namespace Communications
                 }
                 
                 NetworkStream stream = _tcpClient.GetStream();
-                byte[] buffer = Encoding.UTF8.GetBytes(text.Replace("/n","//n"));
+                byte[] buffer = Encoding.UTF8.GetBytes(text);
                
                 await stream.WriteAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
             }

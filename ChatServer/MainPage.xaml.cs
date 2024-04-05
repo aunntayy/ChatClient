@@ -134,8 +134,7 @@ namespace ChatServer
         /// </summary>
         /// <param name="channel">The networking channel representing the client.</param>
         /// <param name="message">The received message.</param>
-        private void OnMessageReceived(Networking channel, string message)
-        {
+        private void OnMessageReceived(Networking channel, string message) { 
             if (message.StartsWith("Command Name"))
             {
                 string[] parts = message.Split(new[] { "Command Name" }, StringSplitOptions.None);
@@ -159,6 +158,7 @@ namespace ChatServer
                         _logger.LogInformation("Command name: " + $"{channel.ID} - {message}");
                         _logger.LogInformation("Participant List: " + $"{channel.ID} : {channel.RemoteAddressPort}\n");
                     });
+                    participantUpdate();
                 }
             }
             else if (message.StartsWith("Command Participants"))
@@ -168,7 +168,7 @@ namespace ChatServer
                 //retrieve client
                 foreach (var client in _clients)
                 {
-                    requestList += $",{client.ID}";
+                    requestList += $",{client.ID} - {channel.RemoteAddressPort} {Environment.NewLine}";
                 }
 
                 _ = channel.SendAsync(requestList);
@@ -243,7 +243,7 @@ namespace ChatServer
             {
                 Dispatcher.Dispatch(() =>
                 {
-                    participantList.Text += channel.ID;
+                    participantList.Text += $"{channel.ID} - {channel.RemoteAddressPort} {Environment.NewLine}" ;
                 });
             }
             _logger.LogInformation("Participant list updated");
