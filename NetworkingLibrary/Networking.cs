@@ -164,7 +164,7 @@ namespace Communications
             try
             {
                 /// If the connection happens to already be established, this is a NOP (i.e., nothing happens).
-                if (_tcpClient is null) 
+                if (!IsConnected) 
                 {
                     _tcpClient = new TcpClient();
                     await _tcpClient.ConnectAsync(host, port);
@@ -235,28 +235,32 @@ namespace Communications
         {
             try
             {
-                StringBuilder saveMessage = new();
-                NetworkStream stream = _tcpClient.GetStream();           
+                if (IsConnected)
+                {
+                    StringBuilder saveMessage = new();
+                    NetworkStream stream = _tcpClient.GetStream();
 
-                if (stream == null)
-                {
-                    return;
-                }
-                using (stream)
-                {
-                    while (infinite)
+                    if (stream == null)
                     {
-                        byte[] buffer = new byte[4096];                  
-                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
-                        _cancellationTokenSource.Token.ThrowIfCancellationRequested();                     
-                        string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                        message.Replace("\n", "\\n");
-                        saveMessage.Append(message);
-                        onMessage(this, message);    
-                        if (!infinite)
-                            break;
+                        return;
+                    }
+                    using (stream)
+                    {
+                        while (infinite)
+                        {
+                            byte[] buffer = new byte[4096];
+                            int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
+                            _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+                            string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                            message.Replace("\n", "\\n");
+                            saveMessage.Append(message);
+                            onMessage(this, message);
+                            if (!infinite)
+                                break;
+                        }
                     }
                 }
+               
             }
             catch (OperationCanceledException)
             {
