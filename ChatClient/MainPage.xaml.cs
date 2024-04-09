@@ -86,7 +86,7 @@ namespace ChatClient
                 // Update the button text to "Connected"
                 Dispatcher.Dispatch(() =>
                 {
-                    ConnectBttn.Text = "Connect to server";
+                    ConnectBttn.Text = "Connected";
                     ConnectBttn.IsEnabled = false;
                     messageBoard.Text += "Connected to server:)" + Environment.NewLine;
                 });
@@ -145,6 +145,14 @@ namespace ChatClient
             _logger.LogDebug($"Disconnecting {channel}");
             ConnectBttn.IsEnabled = true;
             _ = _client.HandleIncomingDataAsync(false);
+      
+                Dispatcher.Dispatch(() =>
+                {
+                    ConnectBttn.Text = "Connect to server";
+                    ConnectBttn.IsEnabled = true;
+                    messageBoard.Text += "Connected to server:)" + Environment.NewLine;
+                });
+            
         }
 
         /// <summary>

@@ -164,7 +164,7 @@ namespace Communications
             try
             {
                 /// If the connection happens to already be established, this is a NOP (i.e., nothing happens).
-                if (!IsConnected) 
+                if (_tcpClient is null) 
                 {
                     _tcpClient = new TcpClient();
                     await _tcpClient.ConnectAsync(host, port);
