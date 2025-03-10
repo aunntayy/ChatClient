@@ -1,14 +1,14 @@
-'<summary>
-Author:     Phuc Hoang
-Partner:    Chanphone Visathip
-Start Date: 23-Mar-2024
-Course:     CS 3500, University of Utah, School of Computing
-GitHub ID:  PhucHoang123
-Repo:       https://github.com/uofu-cs3500-spring24/assignment-seven-logging-and-networking-v_tekkkkk2
-Commit Date:4-April-2024 11:25pm
-Solution:   Networking_and_logging
-Copyright:  CS 3500 and Phuc Hoang and Chanphone Visathip - This work may not be copied for use in Academic Coursework.
-</summary>'
+<summary>
+	Author:     Phuc Hoang
+	Partner:    Chanphone Visathip
+	Start Date: 23-Mar-2024
+	Course:     CS 3500, University of Utah, School of Computing
+	GitHub ID:  PhucHoang123
+	Repo:       https://github.com/aunntayy/ChatClient
+	Commit Date:4-April-2024 11:25pm
+	Solution:   Networking_and_logging
+	Copyright:  CS 3500 and Phuc Hoang and Chanphone Visathip - This work may not be copied for use in Academic Coursework.
+</summary>
 
 # Overview of the Chat Client functionality
 	It is a Chat Client program that let user connect to same IP address and port number to chat with others user.
